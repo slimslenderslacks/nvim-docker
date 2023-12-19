@@ -10,12 +10,13 @@ do
   _2amodule_2a["aniseed/locals"] = {}
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
-local autoload = (require("nvim-docker-ai.aniseed.autoload")).autoload
-local dockerai, filetypes, nano_copilot = autoload("dockerai"), autoload("filetypes"), autoload("nano-copilot")
-do end (_2amodule_locals_2a)["dockerai"] = dockerai
+local core, dockerai, filetypes, nano_copilot = require("nvim-docker-ai.aniseed.core"), require("dockerai"), require("filetypes"), require("nano-copilot")
+do end (_2amodule_locals_2a)["core"] = core
+_2amodule_locals_2a["dockerai"] = dockerai
 _2amodule_locals_2a["filetypes"] = filetypes
 _2amodule_locals_2a["nano-copilot"] = nano_copilot
 local function init()
+  return core.println("initialize docker ai")
 end
 _2amodule_2a["init"] = init
 return _2amodule_2a

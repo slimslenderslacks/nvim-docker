@@ -5,7 +5,8 @@
              util slim.nvim
              curl plenary.curl
              dockerai dockerai
-             lsps lsps}})
+             lsps lsps}
+   require {dockerai dockerai}})
 
 (defn open [lines]
   (let [buf (vim.api.nvim_create_buf false true)]
