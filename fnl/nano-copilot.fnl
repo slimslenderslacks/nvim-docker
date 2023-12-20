@@ -19,7 +19,7 @@
 (defn openselection []
   (open (util.get-current-buffer-selection)))
 
-(nvim.set_keymap :v :<leader>ai ":lua require('nano-copilot').openselection()<CR>" {})
+;(nvim.set_keymap :v :<leader>ai ":lua require('nano-copilot').openselection()<CR>" {})
 
 ;;; --------
 
@@ -77,10 +77,4 @@
           (dockerai.into-buffer selected))))))
 
 (nvim.set_keymap :n :<leader>ai ":lua require('nano-copilot').dockerCopilot()<CR>" {})
-
-(comment
-  (dockerai.start)
-  (lsps.list)
-  (dockerai.stop)
-  )
 
