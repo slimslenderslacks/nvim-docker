@@ -262,6 +262,19 @@
       (nvim.win_set_buf new-win term-buf)
       (nvim.fn.termopen cmd))))
 
+(comment
+  (def buf (vim.api.nvim_create_buf true true))
+  
+  (start) 
+  (lsps.list)
+  (stop)
+
+  (run-prompt "18" (callback buf) "Can you write a Dockerfile for this project?")
+  (run-prompt "19" (callback buf) "Summarize this project")
+  (run-prompt "21" (callback buf) "How do I dockerize my project")
+  (run-prompt "22" (callback buf) "How do I build this Docker project?")
+  )
+
 (defn lsp-debug [_]
   (vim.ui.select
       ["documents"
@@ -281,16 +294,46 @@
 (vim.api.nvim_create_user_command "DockerAIStop" stop {:desc "Stop the LSPs for Docker AI"})
 (vim.api.nvim_create_user_command "DockerAIDebug" lsp-debug {:desc "Get some state from the Docker LSP"})
 
-(comment
-  (def buf (vim.api.nvim_create_buf true true))
-  
-  (start) 
-  (lsps.list)
-  (stop)
+(defn tail_server_info []
+  (let [clients (vim.lsp.get_active_clients)]
+    (each [n client (pairs clients)]
+      (if (= client.name "docker_lsp")
+        (let [result (client.request_sync "docker/serverInfo/raw" {} 5000)]
+          (print result.result.port result.result.log-path result.result.team-id)
+          (nvim.command  (core.str "vs | :term bash -c \"tail -f " result.result.log-path "\"")))))))
 
-  (run-prompt "18" (callback buf) "Can you write a Dockerfile for this project?")
-  (run-prompt "19" (callback buf) "Summarize this project")
-  (run-prompt "21" (callback buf) "How do I dockerize my project")
-  (run-prompt "22" (callback buf) "How do I build this Docker project?")
-  )
+(defn set_team_id [args]
+  (let [clients (vim.lsp.get_active_clients)]
+    (each [n client (pairs clients)]
+      (if (= client.name "docker_lsp")
+        (let [result (client.request_sync "docker/team-id" args 5000)]
+          (print result))))))
+
+(defn docker_server_info [args]
+  (let [clients (vim.lsp.get_active_clients)]
+    (each [n client (pairs clients)]
+      (if (= client.name "docker_lsp")
+        (let [result (client.request_sync "docker/serverInfo/show" args 5000)]
+          (core.println result))))))
+
+(defn docker_login [args]
+  (let [clients (vim.lsp.get_active_clients)]
+    (each [n client (pairs clients)]
+      (if (= client.name "docker_lsp")
+        (let [result (client.request_sync "docker/login" args 5000)]
+          (print result))))))
+
+(defn docker_logout [args]
+  (let [clients (vim.lsp.get_active_clients)]
+    (each [n client (pairs clients)]
+      (if (= client.name "docker_lsp")
+        (let [result (client.request_sync "docker/logout" args 5000)]
+          (print result))))))
+
+(nvim.create_user_command "DockerWorkspace" set_team_id {:nargs "?"})
+(nvim.create_user_command "DockerServerInfo" docker_server_info {:nargs "?"})
+(nvim.create_user_command "DockerLogin" docker_login {:nargs "?"})
+(nvim.create_user_command "DockerLogout" docker_logout {:nargs "?"})
+
+
 
