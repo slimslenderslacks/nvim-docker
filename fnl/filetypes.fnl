@@ -4,5 +4,6 @@
   {:filename
    {"compose.yaml" "dockercompose"
     ".dockerignore" "dockerignore"}
-   :extension {"shellscript" "shellscript"}})
+   :extension 
+   {:shellscript "shellscript"}})
 
