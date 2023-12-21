@@ -70,7 +70,7 @@ local function docker_lsp_docker_runner(root_dir)
   return {"docker", "run", "--rm", "--init", "--interactive", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "vonwig/lsp", "listen", "--workspace", "/docker", "--root-dir", root_dir}
 end
 _2amodule_2a["docker-lsp-docker-runner"] = docker_lsp_docker_runner
-local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose", "markdown", "datalog-edn"}
+local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose", "markdown", "datalog-edn", "shellscript"}
 _2amodule_2a["docker-lsp-filetypes"] = docker_lsp_filetypes
 local function start(root_dir, extra_handlers)
   return vim.lsp.start({name = "docker_lsp", cmd = docker_lsp_nix_runner(root_dir), cmd_env = {DOCKER_LSP = "nix"}, root_dir = root_dir, on_attach = attach_callback, handlers = core.merge(handlers, extra_handlers)})

@@ -10,5 +10,5 @@ do
   _2amodule_2a["aniseed/locals"] = {}
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
-vim.filetype.add({filename = {["compose.yaml"] = "dockercompose", [".dockerignore"] = "dockerignore"}})
+vim.filetype.add({filename = {["compose.yaml"] = "dockercompose", [".dockerignore"] = "dockerignore"}, extension = {shellscript = "shellscript"}})
 return _2amodule_2a

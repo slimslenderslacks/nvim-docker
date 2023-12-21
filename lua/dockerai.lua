@@ -79,7 +79,7 @@ _2amodule_2a["jwt-handler"] = jwt_handler
 local function start_lsps(prompt_handler0, exit_handler0)
   local root_dir = util["git-root"]()
   local extra_handlers = {["docker/jwt"] = jwt_handler}
-  vim.lsp.start({name = "docker_ai", cmd = {"docker", "run", "--rm", "--init", "--interactive", "vonwig/labs-assistant-ml:staging"}, root_dir = root_dir, handlers = core.merge({["$/prompt"] = prompt_handler0, ["$/exit"] = exit_handler0}, extra_handlers)})
+  vim.lsp.start({name = "docker_ai", cmd = {"docker", "run", "--rm", "--init", "--interactive", "docker/labs-assistant-ml:staging"}, root_dir = root_dir, handlers = core.merge({["$/prompt"] = prompt_handler0, ["$/exit"] = exit_handler0}, extra_handlers)})
   return lsps.start(root_dir, extra_handlers)
 end
 _2amodule_2a["start-lsps"] = start_lsps
@@ -108,7 +108,7 @@ local function run_prompt(question_id, callback, prompt)
     local k = jwt()
     _11_ = {jwt = k, parsedJWT = decode_payload(k)}
   end
-  result = docker_ai_lsp.request_sync("prompt", core.merge((docker_lsp.request_sync("docker/project-facts", {["vs-machine-id"] = ""}, 60000)).result, {["extension/id"] = question_id, question = {prompt = prompt}}, {dockerImagesResult = {}, dockerPSResult = {}, dockerDFResult = {}, dockerCredential = _11_, platform = {arch = "arm64", platform = "darwin", release = "23.0.0"}, vsMachineId = "", isProduction = true, notebookOpens = 1, notebookCloses = 1, notebookUUID = "", dataTrackTimestamp = 0}))
+  result = docker_ai_lsp.request_sync("prompt", core.merge((docker_lsp.request_sync("docker/project-facts", {["vs-machine-id"] = ""}, 60000)).result, {["extension/id"] = question_id, question = {prompt = prompt}}, {dockerImagesResult = {}, dockerPSResult = {}, dockerDFResult = {}, dockerCredential = _11_, platform = {arch = "arm64", platform = "darwin", release = "23.0.0"}, vsMachineId = "", isProduction = true, notebookOpens = 1, notebookCloses = 1, notebookUUID = "", dataTrackTimestamp = 0, stream = true}))
   return core.println(result)
 end
 _2amodule_2a["run-prompt"] = run_prompt
@@ -147,17 +147,21 @@ local function complain(_13_)
   return docker_lsp.request_sync("docker/complain", params, 10000)
 end
 _2amodule_2a["complain"] = complain
-local function docker_ai_content_handler(message)
+local function append(current_lines, s)
+  return core.str(string.join("\n", current_lines), s)
+end
+_2amodule_2a["append"] = append
+local function docker_ai_content_handler(current_lines, message)
   if message.content then
-    return string.split(message.content, "\n")
+    return string.split(append(current_lines, message.content), "\n")
   elseif (message.function_call and ((message.function_call.name == "cell-execution") or (message.function_call.name == "suggest-command"))) then
-    return core.concat({"", "```bash"}, string.split(message.function_call.arguments.command, "\n"), {"```", ""})
+    return core.concat(current_lines, {"", "```bash"}, string.split(message.function_call.arguments.command, "\n"), {"```", ""})
   elseif (message.function_call and (message.function_call.name == "update-file")) then
     local _let_17_ = message.function_call.arguments
     local path = _let_17_["path"]
     util["open-file"](path)
     complain(message.function_call.arguments)
-    return {"", "I've opened a buffer to the right and created a code action for your review."}
+    return core.concat(current_lines, {"", "I've opened a buffer to the right and created a code action for your review."})
   elseif (message.function_call and (message.function_call.name == "create-notebook")) then
     local _let_18_ = message.function_call.arguments
     local notebook = _let_18_["notebook"]
@@ -173,18 +177,18 @@ local function docker_ai_content_handler(message)
     notebook_content = core.mapcat(_21_, cells.cells)
     local buf = util["open-file"](notebook)
     util.append(buf, notebook_content)
-    return {"", "I've opened a new notebook to the right."}
+    return core.concat(current_lines, {"", "I've opened a new notebook to the right."})
   elseif (message.function_call and (message.function_call.name == "show-notification")) then
     local _let_22_ = message.function_call.arguments
     local level = _let_22_["level"]
     local message0 = _let_22_["message"]
     local actions = _let_22_["actions"]
     vim.api.nvim_notify(message0, vim.log.levels.INFO, {})
-    return {""}
+    return core.concat(current_lines, {""})
   elseif message.complete then
-    return {""}
+    return core.concat(current_lines, {""})
   else
-    return {"", "```json", vim.json.encode(message), "```", ""}
+    return core.concat(current_lines, {"", "```json", vim.json.encode(message), "```", ""})
   end
 end
 _2amodule_2a["docker-ai-content-handler"] = docker_ai_content_handler
@@ -197,9 +201,9 @@ local function into_buffer(prompt)
   nvim.buf_set_lines(buf, -1, -1, false, {"", ""})
   local function _25_(_, message)
     t:stop()
-    local current_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, true)
-    local lines0 = docker_ai_content_handler(message)
-    return vim.api.nvim_buf_set_lines(buf, core.count(current_lines), -1, false, lines0)
+    local current_lines = vim.api.nvim_buf_get_lines(buf, 4, -1, false)
+    local lines0 = docker_ai_content_handler(current_lines, message)
+    return vim.api.nvim_buf_set_lines(buf, 4, -1, false, lines0)
   end
   local function _26_(_, message)
     return core.println(message)
@@ -248,6 +252,7 @@ local function bottom_terminal(cmd)
   return nvim.fn.termopen(cmd)
 end
 _2amodule_2a["bottom-terminal"] = bottom_terminal
+--[[ (def buf (vim.api.nvim_create_buf true true)) (start) (lsps.list) (stop) (run-prompt "18" (callback buf) "Can you write a Dockerfile for this project?") (run-prompt "19" (callback buf) "Summarize this project") (run-prompt "21" (callback buf) "How do I dockerize my project") (run-prompt "22" (callback buf) "How do I build this Docker project?") ]]
 local function lsp_debug(_)
   local function _34_(item)
     return item:gsub("_", " ")
@@ -262,5 +267,69 @@ _2amodule_2a["lsp-debug"] = lsp_debug
 vim.api.nvim_create_user_command("DockerAIStart", start, {desc = "Start the LSPs for Docker AI"})
 vim.api.nvim_create_user_command("DockerAIStop", stop, {desc = "Stop the LSPs for Docker AI"})
 vim.api.nvim_create_user_command("DockerAIDebug", lsp_debug, {desc = "Get some state from the Docker LSP"})
---[[ (def buf (vim.api.nvim_create_buf true true)) (start) (lsps.list) (stop) (run-prompt "18" (callback buf) "Can you write a Dockerfile for this project?") (run-prompt "19" (callback buf) "Summarize this project") (run-prompt "21" (callback buf) "How do I dockerize my project") (run-prompt "22" (callback buf) "How do I build this Docker project?") ]]
+local function tail_server_info()
+  local clients = vim.lsp.get_active_clients()
+  for n, client in pairs(clients) do
+    if (client.name == "docker_lsp") then
+      local result = client.request_sync("docker/serverInfo/raw", {}, 5000)
+      print(result.result.port, result.result["log-path"], result.result["team-id"])
+      nvim.command(core.str("vs | :term bash -c \"tail -f ", result.result["log-path"], "\""))
+    else
+    end
+  end
+  return nil
+end
+_2amodule_2a["tail_server_info"] = tail_server_info
+local function set_team_id(args)
+  local clients = vim.lsp.get_active_clients()
+  for n, client in pairs(clients) do
+    if (client.name == "docker_lsp") then
+      local result = client.request_sync("docker/team-id", args, 5000)
+      print(result)
+    else
+    end
+  end
+  return nil
+end
+_2amodule_2a["set_team_id"] = set_team_id
+local function docker_server_info(args)
+  local clients = vim.lsp.get_active_clients()
+  for n, client in pairs(clients) do
+    if (client.name == "docker_lsp") then
+      local result = client.request_sync("docker/serverInfo/show", args, 5000)
+      core.println(result)
+    else
+    end
+  end
+  return nil
+end
+_2amodule_2a["docker_server_info"] = docker_server_info
+local function docker_login(args)
+  local clients = vim.lsp.get_active_clients()
+  for n, client in pairs(clients) do
+    if (client.name == "docker_lsp") then
+      local result = client.request_sync("docker/login", args, 5000)
+      print(result)
+    else
+    end
+  end
+  return nil
+end
+_2amodule_2a["docker_login"] = docker_login
+local function docker_logout(args)
+  local clients = vim.lsp.get_active_clients()
+  for n, client in pairs(clients) do
+    if (client.name == "docker_lsp") then
+      local result = client.request_sync("docker/logout", args, 5000)
+      print(result)
+    else
+    end
+  end
+  return nil
+end
+_2amodule_2a["docker_logout"] = docker_logout
+nvim.create_user_command("DockerWorkspace", set_team_id, {nargs = "?"})
+nvim.create_user_command("DockerServerInfo", docker_server_info, {nargs = "?"})
+nvim.create_user_command("DockerLogin", docker_login, {nargs = "?"})
+nvim.create_user_command("DockerLogout", docker_logout, {nargs = "?"})
 return _2amodule_2a

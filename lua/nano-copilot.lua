@@ -31,7 +31,6 @@ local function openselection()
   return open(util["get-current-buffer-selection"]())
 end
 _2amodule_2a["openselection"] = openselection
-nvim.set_keymap("v", "<leader>ai", ":lua require('nano-copilot').openselection()<CR>", {})
 local function ollama(system_prompt, prompt, cb)
   local function _1_(_, chunk, _0)
     return cb(vim.json.decode(chunk).response)
@@ -71,5 +70,4 @@ local function dockerCopilot()
 end
 _2amodule_2a["dockerCopilot"] = dockerCopilot
 nvim.set_keymap("n", "<leader>ai", ":lua require('nano-copilot').dockerCopilot()<CR>", {})
---[[ (dockerai.start) (lsps.list) (dockerai.stop) ]]
 return _2amodule_2a
