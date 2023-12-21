@@ -93,7 +93,7 @@
                          ;:handlers (core.assoc handlers "docker/jwt" dockerai.jwt-handler)
                          ;:capabilities capabilities})
 
-(def docker-lsp-filetypes ["dockerfile" "dockerignore" "dockercompose" "markdown" "datalog-edn"])
+(def docker-lsp-filetypes ["dockerfile" "dockerignore" "dockercompose" "markdown" "datalog-edn" "shellscript"])
 
 ;; vim.lsp.start attaches the current buffer
 (defn start [root-dir extra-handlers]

@@ -69,7 +69,7 @@
     (vim.lsp.start {:name "docker_ai"
                     :cmd ["docker" "run"
                           "--rm" "--init" "--interactive"
-                          "vonwig/labs-assistant-ml:staging"]
+                          "docker/labs-assistant-ml:staging"]
                     :root_dir root-dir
                     :handlers (core.merge 
                                 {"$/prompt" prompt-handler
@@ -111,7 +111,8 @@
                       :notebookOpens 1
                       :notebookCloses 1
                       :notebookUUID ""
-                      :dataTrackTimestamp 0}))] 
+                      :dataTrackTimestamp 0
+                      :stream true}))] 
       (core.println result))))
 
 (defn questions []
@@ -151,12 +152,15 @@
                 :edit edit}]
     (docker-lsp.request_sync "docker/complain" params 10000)))
 
-(defn docker-ai-content-handler [message]
+(defn append [current-lines s]
+  (core.str (string.join "\n" current-lines) s))
+
+(defn docker-ai-content-handler [current-lines message]
   "returns an array of strings"
   (if 
     ;; content
     (. message :content)
-    (string.split (. message :content) "\n")
+    (string.split (append current-lines (. message :content)) "\n")
 
     ;; cell-execution or suggest-command
     (and 
@@ -165,6 +169,7 @@
         (= (-> message (. :function_call) (. :name)) "cell-execution")
         (= (-> message (. :function_call) (. :name)) "suggest-command")))
     (core.concat 
+      current-lines
       ["" "```bash"] 
       (string.split (-> message (. :function_call) (. :arguments) (. :command)) "\n") 
       ["```" ""])  
@@ -178,7 +183,9 @@
       (util.open-file path)
       (complain (-> message (. :function_call) (. :arguments)))  
        
-      ["" "I've opened a buffer to the right and created a code action for your review."])  
+      (core.concat
+        current-lines
+        ["" "I've opened a buffer to the right and created a code action for your review."]))  
 
     ;; create-notebook
     (and 
@@ -194,7 +201,9 @@
                            (. cells :cells))]
       (let [buf (util.open-file notebook)]
         (util.append buf notebook-content)
-        ["" "I've opened a new notebook to the right."])) 
+        (core.concat
+          current-lines
+          ["" "I've opened a new notebook to the right."]))) 
 
     ;; show-notification
     (and 
@@ -205,14 +214,20 @@
       ;; neovim supports TRACE DEBUG INFO WARN ERROR OFF
       ;; DEBUG INFO WARNING ERROR
       (vim.api.nvim_notify message vim.log.levels.INFO {})
-      [""])  
+      (core.concat
+        current-lines
+        [""]))  
 
     ;; complete
     (. message :complete)
-    [""] 
+    (core.concat
+      current-lines
+      [""]) 
 
     ;; default - show json payload
-    ["" "```json" (vim.json.encode message) "```" ""]))
+    (core.concat
+      current-lines
+      ["" "```json" (vim.json.encode message) "```" ""])))
 
 ;; this is where we define the question specific content, error and exit handlers
 ;; content handler has to handle function_calls and content nodes
@@ -228,9 +243,9 @@
       {:content 
        (fn [_ message] 
          (t:stop) 
-         (let [current-lines (vim.api.nvim_buf_get_lines buf 0 -1 true)
-               lines (docker-ai-content-handler message)]
-           (vim.api.nvim_buf_set_lines buf (core.count current-lines) -1 false lines)))
+         (let [current-lines (vim.api.nvim_buf_get_lines buf 4 -1 false)
+               lines (docker-ai-content-handler current-lines message)]
+           (vim.api.nvim_buf_set_lines buf 4 -1 false lines)))
        :error (fn [_ message] (core.println message))
        :exit (fn [id message] (core.println "finished" id))}        
       prompt)))
