@@ -1,9 +1,11 @@
 (module filetypes)
 
 (vim.filetype.add
-  {:filename
+  {:extension 
+   {:shellscript "shellscript"}
+   :filename
    {"compose.yaml" "dockercompose"
     ".dockerignore" "dockerignore"}
-   :extension 
-   {:shellscript "shellscript"}})
+   :pattern
+   {"*.shellscript" "shellscript"}})
 
