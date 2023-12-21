@@ -16,7 +16,8 @@ _2amodule_locals_2a["dockerai"] = dockerai
 _2amodule_locals_2a["filetypes"] = filetypes
 _2amodule_locals_2a["nano-copilot"] = nano_copilot
 local function init()
-  return core.println("initialize docker ai")
+  core.println("initialize docker ai")
+  return filetypes.init()
 end
 _2amodule_2a["init"] = init
 return _2amodule_2a

@@ -5,4 +5,5 @@
             core aniseed.core}})
 
 (defn init []
-  (core.println "initialize docker ai"))
+  (core.println "initialize docker ai")
+  (filetypes.init))
