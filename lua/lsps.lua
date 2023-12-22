@@ -73,12 +73,13 @@ _2amodule_2a["docker-lsp-docker-runner"] = docker_lsp_docker_runner
 local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose", "markdown", "datalog-edn", "shellscript"}
 _2amodule_2a["docker-lsp-filetypes"] = docker_lsp_filetypes
 local function start(root_dir, extra_handlers)
-  return vim.lsp.start({name = "docker_lsp", cmd = docker_lsp_nix_runner(root_dir), cmd_env = {DOCKER_LSP = "nix"}, root_dir = root_dir, on_attach = attach_callback, handlers = core.merge(handlers, extra_handlers)})
+  return vim.lsp.start({name = "docker_lsp", cmd = docker_lsp_nix_runner(root_dir), cmd_env = {DOCKER_LSP = "nix"}, root_dir = root_dir, on_attach = attach_callback, settings = {docker = {assistant = {debug = true}}}, handlers = core.merge(handlers, extra_handlers)})
 end
 _2amodule_2a["start"] = start
 local function _4_()
   local client = get_client_by_name("docker_lsp")
   if client then
+    core.println("attach docker_lsp to current buffer")
     return vim.lsp.buf_attach_client(0, client.id)
   else
     return nil

@@ -349,6 +349,6 @@
 (nvim.create_user_command "DockerServerInfo" docker_server_info {:nargs "?"})
 (nvim.create_user_command "DockerLogin" docker_login {:nargs "?"})
 (nvim.create_user_command "DockerLogout" docker_logout {:nargs "?"})
-
+(nvim.create_user_command "DockerTailServerInfo" tail_server_info {:nargs "?"})
 
 

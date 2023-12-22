@@ -102,6 +102,10 @@
                   :cmd_env {"DOCKER_LSP" "nix"}
                   :root_dir root-dir
                   :on_attach attach-callback
+                  :settings 
+                  {:docker
+                   {:assistant
+                    {:debug true}}}
                   :handlers (core.merge
                               handlers
                               extra-handlers)}))
@@ -110,6 +114,7 @@
   "FileType"
   {:pattern docker-lsp-filetypes
    :callback (fn [] (let [client (get-client-by-name "docker_lsp")]
-                      (if client
+                      (when client
+                        (core.println "attach docker_lsp to current buffer")
                         (vim.lsp.buf_attach_client 0 client.id))))})
 
