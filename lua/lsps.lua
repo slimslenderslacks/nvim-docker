@@ -35,7 +35,7 @@ local function list()
   return core.map(_3_, vim.lsp.get_active_clients())
 end
 _2amodule_2a["list"] = list
-local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, update_in_insert = false, virtual_text = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
+local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, virtual_text = false, update_in_insert = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
 _2amodule_2a["handlers"] = handlers
 local function attach_callback(client, bufnr)
   nvim.buf_set_keymap(bufnr, "n", "gd", "<Cmd>lua vim.lsp.buf.definition()<CR>", {noremap = true})
@@ -76,14 +76,15 @@ local function start(root_dir, extra_handlers)
   return vim.lsp.start({name = "docker_lsp", cmd = docker_lsp_nix_runner(root_dir), cmd_env = {DOCKER_LSP = "nix"}, root_dir = root_dir, on_attach = attach_callback, settings = {docker = {assistant = {debug = true}}}, handlers = core.merge(handlers, extra_handlers)})
 end
 _2amodule_2a["start"] = start
+vim.api.nvim_create_augroup("docker-ai", {})
 local function _4_()
   local client = get_client_by_name("docker_lsp")
   if client then
     core.println("attach docker_lsp to current buffer")
-    return vim.lsp.buf_attach_client(0, client.id)
+    vim.lsp.buf_attach_client(0, client.id)
   else
-    return nil
   end
+  return false
 end
-vim.api.nvim_create_autocmd("FileType", {pattern = docker_lsp_filetypes, callback = _4_})
+vim.api.nvim_create_autocmd("FileType", {group = "docker-ai", pattern = docker_lsp_filetypes, callback = _4_, once = false})
 return _2amodule_2a

@@ -110,11 +110,18 @@
                               handlers
                               extra-handlers)}))
 
+(vim.api.nvim_create_augroup
+  "docker-ai" {})
+
 (vim.api.nvim_create_autocmd
   "FileType"
-  {:pattern docker-lsp-filetypes
+  {:group "docker-ai"
+   :pattern docker-lsp-filetypes
+   :once false
    :callback (fn [] (let [client (get-client-by-name "docker_lsp")]
                       (when client
                         (core.println "attach docker_lsp to current buffer")
-                        (vim.lsp.buf_attach_client 0 client.id))))})
+                        (vim.lsp.buf_attach_client 0 client.id))
+                      ;; don't delete the autocmd
+                      false))})
 
