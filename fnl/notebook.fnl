@@ -34,29 +34,39 @@
 (defn now-streaming [s]
   (tset docker-notebook :streaming s))
 
-(defn add-cell-buffer []
-  (let [bufnr (vim.api.nvim_create_buf true false)]
-    (vim.api.nvim_buf_set_name bufnr (core.str "./cells/" (. docker-notebook :count)))
-    (vim.api.nvim_win_set_buf (vim.api.nvim_get_current_win) bufnr)
-    (vim.api.nvim_buf_call bufnr (fn [] (vim.api.nvim_cmd {:cmd "filetype"
-                                                           :args ["detect"]} {})))
-    (set docker-notebook (core.assoc docker-notebook 
+(defn configure-buffer [bufnr]
+  (vim.api.nvim_buf_set_name bufnr (core.str "./cells/" (. docker-notebook :count)))
+  (vim.api.nvim_buf_call bufnr (fn [] (vim.api.nvim_cmd {:cmd "filetype"
+                                                         :args ["detect"]} {})))
+  (vim.api.nvim_buf_set_option bufnr "buftype" "nowrite")
+  (set docker-notebook (core.assoc docker-notebook 
                                      :winnr (vim.api.nvim_get_current_win)
-                                     :count (core.inc (. docker-notebook :count))))
-    bufnr))
+                                     :count (core.inc (. docker-notebook :count)))))
+
+(defn add-cell-buffer []
+  ; create buffer - listed=true, scratch=false
+  (let [bufnr (vim.api.nvim_create_buf false false)]
+    (vim.api.nvim_win_set_buf (vim.api.nvim_get_current_win) bufnr)
+    (configure-buffer bufnr)))
 
 (defn notebook-create []
   (vim.api.nvim_cmd {:cmd "tabnew"} {})
   (let [tab-nr (vim.api.nvim_get_current_tabpage)]
     (vim.api.nvim_tabpage_set_var tab-nr "id" "notebook")
-    (set docker-notebook (core.assoc docker-notebook :nr tab-nr))))
+    (set docker-notebook (core.assoc docker-notebook 
+                                     :nr tab-nr
+                                     :winnr (vim.api.nvim_get_current_win)))
+    (let [bufnr (vim.api.nvim_win_get_buf (vim.api.nvim_get_current_win))]
+      (vim.api.nvim_buf_set_option bufnr "buflisted" false)
+      bufnr)))
 
 (defn notebook-add-cell []
-  (if (not (. docker-notebook :nr))
+  (if (or 
+        (not (. docker-notebook :nr))
+        (not (vim.api.nvim_tabpage_is_valid (. docker-notebook :nr))))
     ;; missing notebook
     (do
-      (notebook-create)
-      (add-cell-buffer))
+      (configure-buffer (notebook-create)))
     (do
       (vim.api.nvim_set_current_tabpage (. docker-notebook :nr))
       (when (. docker-notebook :winnr)

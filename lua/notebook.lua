@@ -27,30 +27,36 @@ local function now_streaming(s)
   return nil
 end
 _2amodule_2a["now-streaming"] = now_streaming
-local function add_cell_buffer()
-  local bufnr = vim.api.nvim_create_buf(true, false)
+local function configure_buffer(bufnr)
   vim.api.nvim_buf_set_name(bufnr, core.str("./cells/", docker_notebook.count))
-  vim.api.nvim_win_set_buf(vim.api.nvim_get_current_win(), bufnr)
   local function _1_()
     return vim.api.nvim_cmd({cmd = "filetype", args = {"detect"}}, {})
   end
   vim.api.nvim_buf_call(bufnr, _1_)
+  vim.api.nvim_buf_set_option(bufnr, "buftype", "nowrite")
   docker_notebook = core.assoc(docker_notebook, "winnr", vim.api.nvim_get_current_win(), "count", core.inc(docker_notebook.count))
-  return bufnr
+  return nil
+end
+_2amodule_2a["configure-buffer"] = configure_buffer
+local function add_cell_buffer()
+  local bufnr = vim.api.nvim_create_buf(false, false)
+  vim.api.nvim_win_set_buf(vim.api.nvim_get_current_win(), bufnr)
+  return configure_buffer(bufnr)
 end
 _2amodule_2a["add-cell-buffer"] = add_cell_buffer
 local function notebook_create()
   vim.api.nvim_cmd({cmd = "tabnew"}, {})
   local tab_nr = vim.api.nvim_get_current_tabpage()
   vim.api.nvim_tabpage_set_var(tab_nr, "id", "notebook")
-  docker_notebook = core.assoc(docker_notebook, "nr", tab_nr)
-  return nil
+  docker_notebook = core.assoc(docker_notebook, "nr", tab_nr, "winnr", vim.api.nvim_get_current_win())
+  local bufnr = vim.api.nvim_win_get_buf(vim.api.nvim_get_current_win())
+  vim.api.nvim_buf_set_option(bufnr, "buflisted", false)
+  return bufnr
 end
 _2amodule_2a["notebook-create"] = notebook_create
 local function notebook_add_cell()
-  if not docker_notebook.nr then
-    notebook_create()
-    return add_cell_buffer()
+  if (not docker_notebook.nr or not vim.api.nvim_tabpage_is_valid(docker_notebook.nr)) then
+    return configure_buffer(notebook_create())
   else
     vim.api.nvim_set_current_tabpage(docker_notebook.nr)
     if docker_notebook.winnr then
