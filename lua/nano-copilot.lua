@@ -51,7 +51,7 @@ local function copilot()
   return execute_prompt(prompt)
 end
 _2amodule_2a["copilot"] = copilot
-nvim.set_keymap("v", "<leader>ai", ":lua require('config.nano-copilot').copilot()<CR>", {})
+nvim.set_keymap("v", "<leader>ai", ":lua require('nano-copilot').copilot()<CR>", {})
 --[[ (lsps.list) (dockerai.into-buffer "Summarize this project") (dockerai.into-buffer "Write a compose file with php and mysql server") ]]
 local function dockerCopilot()
   local prompts = dockerai0.questions()

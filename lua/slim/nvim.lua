@@ -41,7 +41,8 @@ local function open_win(buf, opts)
   nvim.set_option_value("filetype", "markdown", {buf = buf})
   nvim.set_option_value("buftype", "nofile", {buf = buf})
   nvim.set_option_value("wrap", true, {win = win})
-  return nvim.set_option_value("linebreak", true, {win = win})
+  nvim.set_option_value("linebreak", true, {win = win})
+  return win
 end
 _2amodule_2a["open-win"] = open_win
 local function show_spinner(buf, n)

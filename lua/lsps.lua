@@ -80,7 +80,6 @@ vim.api.nvim_create_augroup("docker-ai", {})
 local function _4_()
   local client = get_client_by_name("docker_lsp")
   if client then
-    core.println("attach docker_lsp to current buffer")
     vim.lsp.buf_attach_client(0, client.id)
   else
   end

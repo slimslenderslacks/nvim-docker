@@ -120,7 +120,6 @@
    :once false
    :callback (fn [] (let [client (get-client-by-name "docker_lsp")]
                       (when client
-                        (core.println "attach docker_lsp to current buffer")
                         (vim.lsp.buf_attach_client 0 client.id))
                       ;; don't delete the autocmd
                       false))})

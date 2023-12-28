@@ -51,7 +51,7 @@
                  "\n```\n")]
     (execute-prompt prompt)))
 
-(nvim.set_keymap :v :<leader>ai ":lua require('config.nano-copilot').copilot()<CR>" {})
+(nvim.set_keymap :v :<leader>ai ":lua require('nano-copilot').copilot()<CR>" {})
 
 ;; I need a function that adds strings in python
 ;; My Docker Image should package a Node app based on a package.json file

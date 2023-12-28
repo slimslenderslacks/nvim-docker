@@ -3,7 +3,8 @@
              core aniseed.core
              string aniseed.string
              util slim.nvim
-             lsps lsps}})
+             lsps lsps
+             notebook notebook}})
 
 (vim.lsp.set_log_level "TRACE")
 (def use-nix? true)
@@ -35,20 +36,22 @@
     (if err
       ((. cb :error) (core.get err "extension/id") err)
       (let [content (. result :content)]
-        (when (or 
+        (if (or 
                 (core.get content :complete)
                 (core.get content :function_call)
                 (core.get content :content))
+          ;(vim.json.decode (core.get fc :arguments))
+          ;; TODO check whether the arguments have to be parsed
+          ;;      for the create-notebook function calls
           ((. cb :content) 
            (core.get result "extension/id") 
-           (if (core.get content :function_call)
-             (core.update 
-               content :function_call 
-               (fn [fc] (core.assoc fc :arguments (vim.json.decode (core.get fc :arguments)))))
-             content)))))))
+           content)
+          ((. cb :error) 
+           (core.get result "extension/id") 
+           (core.str "content not recognized: " result)))))))
 
 (defn exit-handler [cb]
-  "returns a handler for question exits"
+  "returns a handler for lsp $/exit callbacks"
   (fn [err result ctx config]
     (if err
       ;; will never happen
@@ -56,14 +59,14 @@
       ;; will have extension/id and exit
       ((. cb :exit) (core.get result "extension/id") result))))
 
-(defn jwt-handler 
-  [err result ctx config]
+(defn jwt-handler [err result ctx config]
+  "handler for lsps that need a jwt"
   (if err
     (core.println "jwt err: " err))
   (jwt))
 
 (defn start-lsps [prompt-handler exit-handler]
-  ;; this lsp calls commands but it is never attached to buffers
+  "start both docker_ai and docker_lsp services"
   (let [root-dir (util.git-root)
         extra-handlers {"docker/jwt" jwt-handler}]
     (vim.lsp.start {:name "docker_ai"
@@ -86,6 +89,9 @@
 (var registrations {})
 
 (defn run-prompt [question-id callback prompt]
+  "call the docker_lsp lsp to get project context, and then call
+     the docker_ai lsp with the context and the prompt
+     The callback must understand the $/prompt notification"
   {:fnl/docstring "call Docker AI and register callback for this question identifier"
    :fnl/arglist [question-id callback prompt]}
   (set registrations (core.assoc registrations question-id callback))
@@ -126,13 +132,6 @@
          "How do I build this Docker project?"
          "Custom Question"]))))
 
-(defn update-buf [buf lines]
-  (vim.api.nvim_buf_call
-    buf
-    (fn [] 
-      (vim.cmd "norm! G")
-      (vim.api.nvim_put lines "" true true))))
-
 (defn complain [{:path path 
                  :languageId language-id 
                  :startLine start-line 
@@ -152,83 +151,6 @@
                 :edit edit}]
     (docker-lsp.request_sync "docker/complain" params 10000)))
 
-(defn append [current-lines s]
-  (core.str (string.join "\n" current-lines) s))
-
-(defn docker-ai-content-handler [current-lines message]
-  "returns an array of strings"
-  (if 
-    ;; content
-    (. message :content)
-    (string.split (append current-lines (. message :content)) "\n")
-
-    ;; cell-execution or suggest-command
-    (and 
-      (. message :function_call) 
-      (or
-        (= (-> message (. :function_call) (. :name)) "cell-execution")
-        (= (-> message (. :function_call) (. :name)) "suggest-command")))
-    (core.concat 
-      current-lines
-      ["" "```bash"] 
-      (string.split (-> message (. :function_call) (. :arguments) (. :command)) "\n") 
-      ["```" ""])  
-
-    ;; update-file
-    (and 
-      (. message :function_call) 
-      (= (-> message (. :function_call) (. :name)) "update-file"))
-    (let [{:path path} 
-          (-> message (. :function_call) (. :arguments))]
-      (util.open-file path)
-      (complain (-> message (. :function_call) (. :arguments)))  
-       
-      (core.concat
-        current-lines
-        ["" "I've opened a buffer to the right and created a code action for your review."]))  
-
-    ;; create-notebook
-    (and 
-      (. message :function_call) 
-      (= (-> message (. :function_call) (. :name)) "create-notebook"))
-    (let [{:notebook notebook :cells cells} (-> message (. :function_call) (. :arguments))
-          notebook-content (core.mapcat
-                             (fn [{:kind kind :value value :languageId language-id}]
-                               (core.concat
-                                 [(.. "```" language-id)]
-                                 (string.split value "\n")
-                                 ["```" ""]))
-                           (. cells :cells))]
-      (let [buf (util.open-file notebook)]
-        (util.append buf notebook-content)
-        (core.concat
-          current-lines
-          ["" "I've opened a new notebook to the right."]))) 
-
-    ;; show-notification
-    (and 
-      (. message :function_call) 
-      (= (-> message (. :function_call) (. :name)) "show-notification"))
-    (let [{:level level :message message :actions actions}
-          (-> message (. :function_call) (. :arguments))]
-      ;; neovim supports TRACE DEBUG INFO WARN ERROR OFF
-      ;; DEBUG INFO WARNING ERROR
-      (vim.api.nvim_notify message vim.log.levels.INFO {})
-      (core.concat
-        current-lines
-        [""]))  
-
-    ;; complete
-    (. message :complete)
-    (core.concat
-      current-lines
-      [""]) 
-
-    ;; default - show json payload
-    (core.concat
-      current-lines
-      ["" "```json" (vim.json.encode message) "```" ""])))
-
 ;; this is where we define the question specific content, error and exit handlers
 ;; content handler has to handle function_calls and content nodes
 (defn into-buffer [prompt]
@@ -241,13 +163,13 @@
     (run-prompt 
       (util.uuid) 
       {:content 
-       (fn [_ message] 
+       (fn [extension-id message] 
          (t:stop) 
-         (let [current-lines (vim.api.nvim_buf_get_lines buf 4 -1 false)
-               lines (docker-ai-content-handler current-lines message)]
-           (vim.api.nvim_buf_set_lines buf 4 -1 false lines)))
-       :error (fn [_ message] (core.println message))
-       :exit (fn [id message] (core.println "finished" id))}        
+         (when (vim.api.nvim_win_is_valid win)
+           (vim.api.nvim_win_close win true))
+         (notebook.docker-ai-content-handler extension-id message))
+       :error (fn [_ message] (core.println (core.str "error: " message)))
+       :exit (fn [id message] (core.println (core.str "finished prompt " prompt) id))}        
       prompt)))
 
 (defn start []
@@ -263,12 +185,22 @@
       (prompt-handler cb)
       (exit-handler cb))))
 
+(defn update-buf [buf lines]
+  (vim.api.nvim_buf_call
+    buf
+    (fn [] 
+      (vim.cmd "norm! G")
+      (vim.api.nvim_put lines "" true true))))
+
 (defn callback [buf]
+  "test callback that just writes everthing into a buffer"
   {:exit (fn [id message] (update-buf buf [id (vim.json.encode message) "----" ""]))
    :error (fn [id message] (update-buf buf [id (vim.json.encode message) "----" ""]))
    :content (fn [id message] (update-buf buf [id (vim.json.encode message) "----" ""]))})
 
 (defn bottom-terminal [cmd]
+  "split current window, create a term buffer in the split window, 
+     and then open a command in that buffer"
   (let [current-win (nvim.tabpage_get_win 0)
         original-buf (nvim.win_get_buf current-win)
         term-buf (nvim.create_buf false true)]
@@ -350,5 +282,4 @@
 (nvim.create_user_command "DockerLogin" docker_login {:nargs "?"})
 (nvim.create_user_command "DockerLogout" docker_logout {:nargs "?"})
 (nvim.create_user_command "DockerTailServerInfo" tail_server_info {:nargs "?"})
-
 

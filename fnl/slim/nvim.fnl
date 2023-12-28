@@ -30,7 +30,8 @@
     (nvim.set_option_value "filetype" "markdown" {:buf buf})
     (nvim.set_option_value "buftype" "nofile" {:buf buf})
     (nvim.set_option_value "wrap" true {:win win})
-    (nvim.set_option_value "linebreak" true {:win win})))
+    (nvim.set_option_value "linebreak" true {:win win})
+    win))
 
 (defn show-spinner [buf n]
   (var current-char 1)
