@@ -46,6 +46,8 @@
           ((. cb :content) 
            (core.get result "extension/id") 
            content)
+          (core.get result "extension/id")
+          true
           ((. cb :error) 
            (core.get result "extension/id") 
            (core.str "content not recognized: " result)))))))
@@ -67,7 +69,8 @@
 
 (defn start-lsps [prompt-handler exit-handler]
   "start both docker_ai and docker_lsp services"
-  (let [root-dir (util.git-root)
+  (let [root-dir ;; TODO (util.git-root)
+          (vim.fn.getcwd)
         extra-handlers {"docker/jwt" jwt-handler}]
     (vim.lsp.start {:name "docker_ai"
                     :cmd ["docker" "run"
@@ -131,25 +134,6 @@
          "Can you write a Dockerfile for this project"
          "How do I build this Docker project?"
          "Custom Question"]))))
-
-(defn complain [{:path path 
-                 :languageId language-id 
-                 :startLine start-line 
-                 :endLine end-line 
-                 :edit edit 
-                 :reason reason}]
-  (let [docker-lsp (lsps.get-client-by-name "docker_lsp")
-        params {:uri {:external (.. "file://" path)} 
-                :message reason 
-                :range 
-                {:start 
-                 {:line (core.dec start-line)
-                  :character 0} 
-                 :end 
-                 {:line (if end-line (- end-line 1) (- start-line 1))
-                  :character -1}} 
-                :edit edit}]
-    (docker-lsp.request_sync "docker/complain" params 10000)))
 
 ;; this is where we define the question specific content, error and exit handlers
 ;; content handler has to handle function_calls and content nodes

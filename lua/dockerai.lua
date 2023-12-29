@@ -40,6 +40,8 @@ local function prompt_handler(cb)
       local content = result.content
       if (core.get(content, "complete") or core.get(content, "function_call") or core.get(content, "content")) then
         return cb.content(core.get(result, "extension/id"), content)
+      elseif core.get(result, "extension/id") then
+        return true
       else
         return cb.error(core.get(result, "extension/id"), core.str("content not recognized: ", result))
       end
@@ -68,7 +70,7 @@ local function jwt_handler(err, result, ctx, config)
 end
 _2amodule_2a["jwt-handler"] = jwt_handler
 local function start_lsps(prompt_handler0, exit_handler0)
-  local root_dir = util["git-root"]()
+  local root_dir = vim.fn.getcwd()
   local extra_handlers = {["docker/jwt"] = jwt_handler}
   vim.lsp.start({name = "docker_ai", cmd = {"docker", "run", "--rm", "--init", "--interactive", "docker/labs-assistant-ml:staging"}, root_dir = root_dir, handlers = core.merge({["$/prompt"] = prompt_handler0, ["$/exit"] = exit_handler0}, extra_handlers)})
   return lsps.start(root_dir, extra_handlers)
@@ -111,34 +113,14 @@ local function questions()
   return core.concat(result["project/potential-questions"], {"Summarize this project", "Can you write a Dockerfile for this project", "How do I build this Docker project?", "Custom Question"})
 end
 _2amodule_2a["questions"] = questions
-local function complain(_10_)
-  local _arg_11_ = _10_
-  local path = _arg_11_["path"]
-  local language_id = _arg_11_["languageId"]
-  local start_line = _arg_11_["startLine"]
-  local end_line = _arg_11_["endLine"]
-  local edit = _arg_11_["edit"]
-  local reason = _arg_11_["reason"]
-  local docker_lsp = lsps["get-client-by-name"]("docker_lsp")
-  local params
-  local _12_
-  if end_line then
-    _12_ = (end_line - 1)
-  else
-    _12_ = (start_line - 1)
-  end
-  params = {uri = {external = ("file://" .. path)}, message = reason, range = {start = {line = core.dec(start_line), character = 0}, ["end"] = {line = _12_, character = -1}}, edit = edit}
-  return docker_lsp.request_sync("docker/complain", params, 10000)
-end
-_2amodule_2a["complain"] = complain
 local function into_buffer(prompt)
   local lines = string.split(prompt, "\n")
-  local _let_14_ = util.open(lines)
-  local win = _let_14_[1]
-  local buf = _let_14_[2]
+  local _let_10_ = util.open(lines)
+  local win = _let_10_[1]
+  local buf = _let_10_[2]
   local t = util["show-spinner"](buf, core.inc(core.count(lines)))
   nvim.buf_set_lines(buf, -1, -1, false, {"", ""})
-  local function _15_(extension_id, message)
+  local function _11_(extension_id, message)
     t:stop()
     if vim.api.nvim_win_is_valid(win) then
       vim.api.nvim_win_close(win, true)
@@ -146,49 +128,49 @@ local function into_buffer(prompt)
     end
     return notebook["docker-ai-content-handler"](extension_id, message)
   end
-  local function _17_(_, message)
+  local function _13_(_, message)
     return core.println(core.str("error: ", message))
   end
-  local function _18_(id, message)
+  local function _14_(id, message)
     return core.println(core.str("finished prompt ", prompt), id)
   end
-  return run_prompt(util.uuid(), {content = _15_, error = _17_, exit = _18_}, prompt)
+  return run_prompt(util.uuid(), {content = _11_, error = _13_, exit = _14_}, prompt)
 end
 _2amodule_2a["into-buffer"] = into_buffer
 local function start()
   local cb
-  local function _19_(id, message)
+  local function _15_(id, message)
     return registrations[id].exit(id, message)
   end
-  local function _20_(id, message)
+  local function _16_(id, message)
     return core.println(id, message)
   end
-  local function _21_(id, message)
+  local function _17_(id, message)
     return registrations[id].content(id, message)
   end
-  cb = {exit = _19_, error = _20_, content = _21_}
+  cb = {exit = _15_, error = _16_, content = _17_}
   return start_lsps(prompt_handler(cb), exit_handler(cb))
 end
 _2amodule_2a["start"] = start
 local function update_buf(buf, lines)
-  local function _22_()
+  local function _18_()
     vim.cmd("norm! G")
     return vim.api.nvim_put(lines, "", true, true)
   end
-  return vim.api.nvim_buf_call(buf, _22_)
+  return vim.api.nvim_buf_call(buf, _18_)
 end
 _2amodule_2a["update-buf"] = update_buf
 local function callback(buf)
-  local function _23_(id, message)
+  local function _19_(id, message)
     return update_buf(buf, {id, vim.json.encode(message), "----", ""})
   end
-  local function _24_(id, message)
+  local function _20_(id, message)
     return update_buf(buf, {id, vim.json.encode(message), "----", ""})
   end
-  local function _25_(id, message)
+  local function _21_(id, message)
     return update_buf(buf, {id, vim.json.encode(message), "----", ""})
   end
-  return {exit = _23_, error = _24_, content = _25_}
+  return {exit = _19_, error = _20_, content = _21_}
 end
 _2amodule_2a["callback"] = callback
 local function bottom_terminal(cmd)
@@ -203,14 +185,14 @@ end
 _2amodule_2a["bottom-terminal"] = bottom_terminal
 --[[ (def buf (vim.api.nvim_create_buf true true)) (start) (lsps.list) (stop) (run-prompt "18" (callback buf) "Can you write a Dockerfile for this project?") (run-prompt "19" (callback buf) "Summarize this project") (run-prompt "21" (callback buf) "How do I dockerize my project") (run-prompt "22" (callback buf) "How do I build this Docker project?") ]]
 local function lsp_debug(_)
-  local function _26_(item)
+  local function _22_(item)
     return item:gsub("_", " ")
   end
-  local function _27_(selected, _0)
+  local function _23_(selected, _0)
     local client = lsps["get-client-by-name"]("docker_lsp")
     return client.request_sync("docker/debug", {type = selected})
   end
-  return vim.ui.select({"documents", "project-context", "tracking-data", "login", "alpine-packages", "repositories", "client-settings"}, {prompt = "Select a prompt:", format = _26_}, _27_)
+  return vim.ui.select({"documents", "project-context", "tracking-data", "login", "alpine-packages", "repositories", "client-settings"}, {prompt = "Select a prompt:", format = _22_}, _23_)
 end
 _2amodule_2a["lsp-debug"] = lsp_debug
 vim.api.nvim_create_user_command("DockerAIStart", start, {desc = "Start the LSPs for Docker AI"})

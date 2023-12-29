@@ -1,7 +1,8 @@
 (module notebook
   {autoload {nvim aniseed.nvim
              core aniseed.core
-             string aniseed.string}})
+             string aniseed.string
+             complaints complaints}})
 
 (comment
   ;; list current tabpage nrs
@@ -36,12 +37,16 @@
 
 (defn configure-buffer [bufnr]
   (vim.api.nvim_buf_set_name bufnr (core.str "./cells/" (. docker-notebook :count)))
+  ;; TODO this usually does nothing because we set the buffer filetype manually and our 
+  ;;      buffer names might not correspond to the filetype
   (vim.api.nvim_buf_call bufnr (fn [] (vim.api.nvim_cmd {:cmd "filetype"
                                                          :args ["detect"]} {})))
   (vim.api.nvim_buf_set_option bufnr "buftype" "nowrite")
+  (vim.api.nvim_buf_set_option bufnr "wrap" true)
   (set docker-notebook (core.assoc docker-notebook 
                                      :winnr (vim.api.nvim_get_current_win)
-                                     :count (core.inc (. docker-notebook :count)))))
+                                     :count (core.inc (. docker-notebook :count))))
+  bufnr)
 
 (defn add-cell-buffer []
   ; create buffer - listed=true, scratch=false
@@ -68,16 +73,16 @@
     (do
       (configure-buffer (notebook-create)))
     (do
-      (vim.api.nvim_set_current_tabpage (. docker-notebook :nr))
+      ;; TODO optionally switch to the buffer
+      ;;(vim.api.nvim_set_current_tabpage (. docker-notebook :nr))
       (when (. docker-notebook :winnr)
-        (vim.api.nvim_set_current_win (. docker-notebook :winnr)))
-      (let [buf-nr (vim.api.nvim_create_buf false true)]
+        (vim.api.nvim_set_current_win (. docker-notebook :winnr))
         (vim.api.nvim_cmd {:cmd "sp"} {})
-        ;; buf is listed and not scratch
         (add-cell-buffer)))))
 
 (defn append-to-cell [s filetype]
-  ""
+  "Appends content to an existing buffer - resets the buffer filetype (filetype generally shouldn't change)
+    prereq - docker notebook must have an active/valid window"
   (let [bufnr (vim.api.nvim_win_get_buf (. docker-notebook :winnr))
         content (string.join "\n" (vim.api.nvim_buf_get_lines bufnr 0 -1 false))]
     (vim.api.nvim_buf_set_lines bufnr 0 -1 false (string.split (core.str content s) "\n"))
@@ -95,23 +100,12 @@
 (vim.api.nvim_create_user_command "NotebookAddCell" notebook-add-cell {:nargs 0})
 (vim.api.nvim_create_user_command "NotebookCoordinates" show-tab-window-buffer {:nargs 0})
 
-;; create a new docker notebook tab
-;; each shellscript/markdown content is loaded into a buffer with a window 
-;; window stack can't be changed 
-;; new windows always show all of the height - existing windows can be shrunk
-;; buffers can be edited and all have files in some local docker directory
-;; add a command that will run whatever is in the selected shellscript buffer 
-;; will need a NotebookScrollUp/NotebookScrollDown command to shuffle tab page window selections
-;; will need a NotebookAddCell comand to append a new cell
-;; will need a NotebookCreate command to start a new one
-
-;; different messages will need to be streamed into different notebook cells 
-;; the message has to go into a stateful thing
-;;   - some messages can write directly to some cell buffer
-;;   - other messages will build up a function call and only the final
-;;     function call will update a cell buffer
-;; get a notebook object
-;; use a content-handler that has a reference to this notebook
+(defn add-file-to-buffer [path language-id]
+  (when (. docker-notebook :winnr)
+    (vim.api.nvim_set_current_win (. docker-notebook :winnr))
+    (vim.api.nvim_cmd {:cmd "sp"} {})
+    (vim.api.nvim_cmd {:cmd "edit" :args [path]} {})
+    (vim.api.nvim_get_current_buf)))
 
 (defn flush-function-call []
   "flush current command"
@@ -119,21 +113,25 @@
     (let [{:name name :arguments args} (. docker-notebook :current-function-call)
           ;; are these sometimes ready without parsing
           arguments (if (core.table? args) args (vim.json.decode args))]
+      (core.println "--- call function " name)
+      (core.println "--- arguments " arguments)
       (if
         (or
           (= name "cell-execution")
           (= name "suggest-command"))
         (do 
           (notebook-add-cell)
-          ;; TODO make cell shellscript filetype buffer
           (append-to-cell (. arguments :command) "shellscript"))
 
         (= name "update-file")
-        (do
-          (notebook-add-cell)
-          ;; read contents of file into cmp_buffer
+        (let [{:languageId language-id :path path :edit edit} arguments
+              bufnr 
+              ;; read contents of file into cmp_buffer
+              (add-file-to-buffer path language-id)]
+          (core.println "do it" (pcall vim.api.nvim_buf_set_lines bufnr 0 0 false (string.split edit "\n")))
           ;; add complaint
-          (append-to-cell (core.str "not complete") "markdown"))
+          ;; (complaints.complain arguments)
+          )
 
         (= name "show-notification")
         (let [{:level level :message message} arguments]
@@ -211,18 +209,26 @@
   (core.println docker-notebook)
   (docker-ai-content-handler nil {:content "some content"})
   (docker-ai-content-handler nil {:content "\nsome more content"})
-  ;; show-notification
   (docker-ai-content-handler nil {:complete true})
+  
+  ;; add file complaint 
+  (docker-ai-content-handler nil {:function_call {:name "update-file" :arguments {:languageId "dockerfile"
+                                                                                  :path "Dockerfile"
+                                                                                  :edit "FROM your ass"}}})
+  (docker-ai-content-handler nil {:complete true})
+
+  ;; show-notification
   (docker-ai-content-handler nil {:function_call {:name "show-notification" :arguments {:message "test message" :level "INFO"}}})
   (docker-ai-content-handler nil {:complete true})
-  (core.println docker-notebook)
-  ;; cell
+
+  ;; cell-execution
   (docker-ai-content-handler nil {:function_call {:name "cell-execution" :arguments ""}})
   (docker-ai-content-handler nil {:function_call 
                                   {:arguments (vim.json.encode 
                                                 {:command "docker build"})}})
   (docker-ai-content-handler nil {:complete true})
 
+  ;; create-notebook
   (docker-ai-content-handler nil {:function_call {:name "create-notebook" 
                                                   :arguments
                                                   {:cells 
