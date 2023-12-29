@@ -173,16 +173,6 @@ local function callback(buf)
   return {exit = _19_, error = _20_, content = _21_}
 end
 _2amodule_2a["callback"] = callback
-local function bottom_terminal(cmd)
-  local current_win = nvim.tabpage_get_win(0)
-  local original_buf = nvim.win_get_buf(current_win)
-  local term_buf = nvim.create_buf(false, true)
-  vim.cmd("split")
-  local new_win = nvim.tabpage_get_win(0)
-  nvim.win_set_buf(new_win, term_buf)
-  return nvim.fn.termopen(cmd)
-end
-_2amodule_2a["bottom-terminal"] = bottom_terminal
 --[[ (def buf (vim.api.nvim_create_buf true true)) (start) (lsps.list) (stop) (run-prompt "18" (callback buf) "Can you write a Dockerfile for this project?") (run-prompt "19" (callback buf) "Summarize this project") (run-prompt "21" (callback buf) "How do I dockerize my project") (run-prompt "22" (callback buf) "How do I build this Docker project?") ]]
 local function lsp_debug(_)
   local function _22_(item)

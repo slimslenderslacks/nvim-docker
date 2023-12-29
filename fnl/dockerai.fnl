@@ -182,16 +182,7 @@
    :error (fn [id message] (update-buf buf [id (vim.json.encode message) "----" ""]))
    :content (fn [id message] (update-buf buf [id (vim.json.encode message) "----" ""]))})
 
-(defn bottom-terminal [cmd]
-  "split current window, create a term buffer in the split window, 
-     and then open a command in that buffer"
-  (let [current-win (nvim.tabpage_get_win 0)
-        original-buf (nvim.win_get_buf current-win)
-        term-buf (nvim.create_buf false true)]
-    (vim.cmd "split")
-    (let [new-win (nvim.tabpage_get_win 0)]
-      (nvim.win_set_buf new-win term-buf)
-      (nvim.fn.termopen cmd))))
+
 
 (comment
   (def buf (vim.api.nvim_create_buf true true))

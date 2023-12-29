@@ -86,6 +86,27 @@ local function notebook_add_cell(_2_)
   end
 end
 _2amodule_2a["notebook-add-cell"] = notebook_add_cell
+local function bottom_terminal(cmd)
+  local current_win = nvim.tabpage_get_win(0)
+  local original_buf = nvim.win_get_buf(current_win)
+  local term_buf = nvim.create_buf(false, true)
+  vim.cmd("split")
+  local new_win = nvim.tabpage_get_win(0)
+  nvim.win_set_buf(new_win, term_buf)
+  return nvim.fn.termopen(cmd)
+end
+_2amodule_2a["bottom-terminal"] = bottom_terminal
+local function runBuffer()
+  local bufnr = vim.api.nvim_get_current_buf()
+  return bottom_terminal(string.join("\n", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)))
+end
+_2amodule_2a["runBuffer"] = runBuffer
+local function make_buf_runnable()
+  local bufnr = vim.api.nvim_win_get_buf(docker_notebook.winnr)
+  core.println("making buf runnable")
+  return core.println(pcall(vim.api.nvim_buf_set_keymap, bufnr, "n", "<leader>run", ":lua require('notebook').runBuffer()<CR>", {}))
+end
+_2amodule_2a["make-buf-runnable"] = make_buf_runnable
 local function append_to_cell(s, filetype)
   local bufnr = vim.api.nvim_win_get_buf(docker_notebook.winnr)
   local content = string.join("\n", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
@@ -144,6 +165,7 @@ local function flush_function_call()
       if ((name == "cell-execution") or (name == "suggest-command")) then
         notebook_add_cell({})
         append_to_cell(arguments.command, "shellscript")
+        make_buf_runnable()
       elseif (name == "update-file") then
         local _let_15_ = arguments
         local language_id = _let_15_["languageId"]
@@ -170,6 +192,10 @@ local function flush_function_call()
             append_to_cell(value, "markdown")
           else
             append_to_cell(value, language_id)
+            if (language_id == "shellscript") then
+              make_buf_runnable()
+            else
+            end
           end
         end
       else
@@ -195,12 +221,12 @@ local function docker_ai_content_handler(extension_id, message)
     now_streaming(nil)
     return flush_function_call()
   else
-    local _24_
+    local _25_
     do
       local call_name = message.function_call.name
-      _24_ = (call_name == "show-notification")
+      _25_ = (call_name == "show-notification")
     end
-    if _24_ then
+    if _25_ then
       local function_call_name = message.function_call.name
       if new_cell_3f(function_call_name) then
         now_streaming(function_call_name)
@@ -219,17 +245,17 @@ local function docker_ai_content_handler(extension_id, message)
       docker_notebook = core.assoc(docker_notebook, "current-function-call", message.function_call)
       return nil
     else
-      local function _28_()
-        local _let_27_ = message.function_call
-        local name = _let_27_["name"]
-        local arguments = _let_27_["arguments"]
+      local function _29_()
+        local _let_28_ = message.function_call
+        local name = _let_28_["name"]
+        local arguments = _let_28_["arguments"]
         return (arguments and not name)
       end
-      if (message.function_call and _28_()) then
+      if (message.function_call and _29_()) then
         local current_function_call = docker_notebook["current-function-call"]
-        local _let_29_ = message.function_call
-        local name = _let_29_["name"]
-        local arguments = _let_29_["arguments"]
+        local _let_30_ = message.function_call
+        local name = _let_30_["name"]
+        local arguments = _let_30_["arguments"]
         docker_notebook = core.assoc(docker_notebook, "current-function-call", core.assoc(current_function_call, "arguments", core.str(current_function_call.arguments, arguments)))
         return nil
       else

@@ -7,7 +7,6 @@
 (comment
   ;; list current tabpage nrs
   (vim.api.nvim_list_tabpages)
-
   ; current tabpage returns the tabnr identifier
   (vim.api.nvim_get_current_tabpage)
   ;; tabmoves can cause the tab numbers to change
@@ -15,13 +14,10 @@
   (vim.api.nvim_tabpage_get_var 2 "id")
   ;; the tab number can be changed by moving tabs around (different from the nr)
   (vim.api.nvim_tabpage_get_number 2)
-
   ; get active window for tab page nr
   (vim.api.nvim_tabpage_get_win 2)
-
   ;; current windows on tab page
   (vim.api.nvim_tabpage_list_wins 0)
-
   ;; switch current tab page
   (vim.api.nvim_set_current_tabpage 2))
 
@@ -94,6 +90,27 @@
             (vim.api.nvim_get_current_buf))
           (add-cell-buffer))))))
 
+(defn bottom-terminal [cmd]
+  "split current window, create a term buffer in the split window, 
+     and then open a command in that buffer"
+  (let [current-win (nvim.tabpage_get_win 0)
+        original-buf (nvim.win_get_buf current-win)
+        term-buf (nvim.create_buf false true)]
+    (vim.cmd "split")
+    (let [new-win (nvim.tabpage_get_win 0)]
+      (nvim.win_set_buf new-win term-buf)
+      (nvim.fn.termopen cmd))))
+
+(defn runBuffer []
+  (let [bufnr (vim.api.nvim_get_current_buf)]
+    (bottom-terminal
+      (string.join "\n" (vim.api.nvim_buf_get_lines bufnr 0 -1 false)))))
+
+(defn make-buf-runnable []
+  (let [bufnr (vim.api.nvim_win_get_buf (. docker-notebook :winnr))]
+    (core.println "making buf runnable")
+    (core.println (pcall vim.api.nvim_buf_set_keymap bufnr :n :<leader>run ":lua require('notebook').runBuffer()<CR>" {}))))
+
 (defn append-to-cell [s filetype]
   "Appends content to an existing buffer - resets the buffer filetype (filetype generally shouldn't change)
     prereq - docker notebook must have an active/valid window"
@@ -141,7 +158,8 @@
           (= name "suggest-command"))
         (do 
           (notebook-add-cell {})
-          (append-to-cell (. arguments :command) "shellscript"))
+          (append-to-cell (. arguments :command) "shellscript")
+          (make-buf-runnable))
 
         (= name "update-file")
         (let [{:languageId language-id :path path :edit edit} arguments
@@ -166,7 +184,10 @@
             (notebook-add-cell {})
             (if (= kind 1)
               (append-to-cell value "markdown")
-              (append-to-cell value language-id))))))
+              (do
+                (append-to-cell value language-id)
+                (when (= language-id "shellscript")
+                  (make-buf-runnable))))))))
     (tset docker-notebook :current-function-call nil)))
 
 (defn docker-ai-content-handler [extension-id message]
