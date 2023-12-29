@@ -30,13 +30,13 @@ end
 _2amodule_2a["now-streaming"] = now_streaming
 local function configure_buffer(bufnr)
   vim.api.nvim_buf_set_name(bufnr, core.str("./cells/", docker_notebook.count))
+  docker_notebook = core.assoc(docker_notebook, "count", core.inc(docker_notebook.count))
   local function _1_()
     return vim.api.nvim_cmd({cmd = "filetype", args = {"detect"}}, {})
   end
   vim.api.nvim_buf_call(bufnr, _1_)
   vim.api.nvim_buf_set_option(bufnr, "buftype", "nowrite")
   vim.api.nvim_buf_set_option(bufnr, "wrap", true)
-  docker_notebook = core.assoc(docker_notebook, "winnr", vim.api.nvim_get_current_win(), "count", core.inc(docker_notebook.count))
   return bufnr
 end
 _2amodule_2a["configure-buffer"] = configure_buffer
@@ -56,14 +56,30 @@ local function notebook_create()
   return bufnr
 end
 _2amodule_2a["notebook-create"] = notebook_create
-local function notebook_add_cell()
+local function notebook_add_cell(_2_)
+  local _arg_3_ = _2_
+  local path = _arg_3_["path"]
+  local language_id = _arg_3_["language-id"]
+  local opts = _arg_3_
   if (not docker_notebook.nr or not vim.api.nvim_tabpage_is_valid(docker_notebook.nr)) then
-    return configure_buffer(notebook_create())
+    local bufnr = notebook_create()
+    if (path and language_id) then
+      vim.api.nvim_cmd({cmd = "edit", args = {path}}, {})
+    else
+      configure_buffer(bufnr)
+    end
+    return bufnr
   else
     if docker_notebook.winnr then
       vim.api.nvim_set_current_win(docker_notebook.winnr)
       vim.api.nvim_cmd({cmd = "sp"}, {})
-      return add_cell_buffer()
+      docker_notebook = core.assoc(docker_notebook, "winnr", vim.api.nvim_get_current_win())
+      if (path and language_id) then
+        vim.api.nvim_cmd({cmd = "edit", args = {path}}, {})
+        return vim.api.nvim_get_current_buf()
+      else
+        return add_cell_buffer()
+      end
     else
       return nil
     end
@@ -73,37 +89,50 @@ _2amodule_2a["notebook-add-cell"] = notebook_add_cell
 local function append_to_cell(s, filetype)
   local bufnr = vim.api.nvim_win_get_buf(docker_notebook.winnr)
   local content = string.join("\n", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, string.split(core.str(content, s), "\n"))
-  local function _4_()
+  local lines = string.split(core.str(content, s), "\n")
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  local function _8_()
     vim.bo.filetype = filetype
     return nil
   end
-  return vim.api.nvim_buf_call(bufnr, _4_)
+  return vim.api.nvim_buf_call(bufnr, _8_)
 end
 _2amodule_2a["append-to-cell"] = append_to_cell
+local function resize()
+  local wins = vim.api.nvim_tabpage_list_wins(docker_notebook.nr)
+  table.remove(wins)
+  for _, winnr in pairs(wins) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr)
+    local line_count = (core.count(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)) + 2)
+    local function _9_()
+      return vim.api.nvim_cmd({cmd = "resize", args = {line_count}}, {})
+    end
+    vim.api.nvim_win_call(winnr, _9_)
+  end
+  return nil
+end
+_2amodule_2a["resize"] = resize
 local function show_tab_window_buffer()
   return core.println(core.str(vim.api.nvim_get_current_tabpage(), "-", vim.api.nvim_get_current_win(), "-", vim.api.nvim_get_current_buf(), "\n", vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win()), "\n", docker_notebook))
 end
 _2amodule_2a["show-tab-window-buffer"] = show_tab_window_buffer
-vim.api.nvim_create_user_command("NotebookAddCell", notebook_add_cell, {nargs = 0})
-vim.api.nvim_create_user_command("NotebookCoordinates", show_tab_window_buffer, {nargs = 0})
-local function add_file_to_buffer(path, language_id)
-  if docker_notebook.winnr then
-    vim.api.nvim_set_current_win(docker_notebook.winnr)
-    vim.api.nvim_cmd({cmd = "sp"}, {})
-    vim.api.nvim_cmd({cmd = "edit", args = {path}}, {})
-    return vim.api.nvim_get_current_buf()
-  else
-    return nil
+local _11_
+do
+  local _10_ = {}
+  local function _12_(...)
+    return notebook_add_cell(_10_, ...)
   end
+  _11_ = _12_
 end
-_2amodule_2a["add-file-to-buffer"] = add_file_to_buffer
+vim.api.nvim_create_user_command("NotebookAddCell", _11_, {nargs = 0})
+vim.api.nvim_create_user_command("NotebookCoordinates", show_tab_window_buffer, {nargs = 0})
+vim.api.nvim_create_user_command("NotebookResize", resize, {nargs = 0})
 local function flush_function_call()
   if docker_notebook["current-function-call"] then
     do
-      local _let_6_ = docker_notebook["current-function-call"]
-      local name = _let_6_["name"]
-      local args = _let_6_["arguments"]
+      local _let_13_ = docker_notebook["current-function-call"]
+      local name = _let_13_["name"]
+      local args = _let_13_["arguments"]
       local arguments
       if core["table?"](args) then
         arguments = args
@@ -113,30 +142,30 @@ local function flush_function_call()
       core.println("--- call function ", name)
       core.println("--- arguments ", arguments)
       if ((name == "cell-execution") or (name == "suggest-command")) then
-        notebook_add_cell()
+        notebook_add_cell({})
         append_to_cell(arguments.command, "shellscript")
       elseif (name == "update-file") then
-        local _let_8_ = arguments
-        local language_id = _let_8_["languageId"]
-        local path = _let_8_["path"]
-        local edit = _let_8_["edit"]
-        local bufnr = add_file_to_buffer(path, language_id)
+        local _let_15_ = arguments
+        local language_id = _let_15_["languageId"]
+        local path = _let_15_["path"]
+        local edit = _let_15_["edit"]
+        local bufnr = notebook_add_cell({path = path, ["language-id"] = language_id})
         core.println("do it", pcall(vim.api.nvim_buf_set_lines, bufnr, 0, 0, false, string.split(edit, "\n")))
       elseif (name == "show-notification") then
-        local _let_9_ = arguments
-        local level = _let_9_["level"]
-        local message = _let_9_["message"]
+        local _let_16_ = arguments
+        local level = _let_16_["level"]
+        local message = _let_16_["message"]
         vim.api.nvim_notify(message, vim.log.levels.INFO, {})
       elseif (name == "create-notebook") then
-        local _let_10_ = arguments
-        local notebook = _let_10_["notebook"]
-        local cells = _let_10_["cells"]
-        for _, _11_ in pairs(cells.cells) do
-          local _each_12_ = _11_
-          local kind = _each_12_["kind"]
-          local value = _each_12_["value"]
-          local language_id = _each_12_["languageId"]
-          notebook_add_cell()
+        local _let_17_ = arguments
+        local notebook = _let_17_["notebook"]
+        local cells = _let_17_["cells"]
+        for _, _18_ in pairs(cells.cells) do
+          local _each_19_ = _18_
+          local kind = _each_19_["kind"]
+          local value = _each_19_["value"]
+          local language_id = _each_19_["languageId"]
+          notebook_add_cell({})
           if (kind == 1) then
             append_to_cell(value, "markdown")
           else
@@ -156,7 +185,7 @@ _2amodule_2a["flush-function-call"] = flush_function_call
 local function docker_ai_content_handler(extension_id, message)
   if message.content then
     if new_cell_3f("content") then
-      notebook_add_cell()
+      notebook_add_cell({})
       now_streaming("content")
       flush_function_call()
     else
@@ -166,12 +195,12 @@ local function docker_ai_content_handler(extension_id, message)
     now_streaming(nil)
     return flush_function_call()
   else
-    local _17_
+    local _24_
     do
       local call_name = message.function_call.name
-      _17_ = (call_name == "show-notification")
+      _24_ = (call_name == "show-notification")
     end
-    if _17_ then
+    if _24_ then
       local function_call_name = message.function_call.name
       if new_cell_3f(function_call_name) then
         now_streaming(function_call_name)
@@ -190,21 +219,21 @@ local function docker_ai_content_handler(extension_id, message)
       docker_notebook = core.assoc(docker_notebook, "current-function-call", message.function_call)
       return nil
     else
-      local function _21_()
-        local _let_20_ = message.function_call
-        local name = _let_20_["name"]
-        local arguments = _let_20_["arguments"]
+      local function _28_()
+        local _let_27_ = message.function_call
+        local name = _let_27_["name"]
+        local arguments = _let_27_["arguments"]
         return (arguments and not name)
       end
-      if (message.function_call and _21_()) then
+      if (message.function_call and _28_()) then
         local current_function_call = docker_notebook["current-function-call"]
-        local _let_22_ = message.function_call
-        local name = _let_22_["name"]
-        local arguments = _let_22_["arguments"]
+        local _let_29_ = message.function_call
+        local name = _let_29_["name"]
+        local arguments = _let_29_["arguments"]
         docker_notebook = core.assoc(docker_notebook, "current-function-call", core.assoc(current_function_call, "arguments", core.str(current_function_call.arguments, arguments)))
         return nil
       else
-        notebook_add_cell()
+        notebook_add_cell({})
         return append_to_cell(vim.json.encode(message), "json")
       end
     end
