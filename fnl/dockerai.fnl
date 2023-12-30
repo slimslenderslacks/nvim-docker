@@ -47,7 +47,6 @@
            (core.get result "extension/id") 
            content)
           (core.get result "extension/id")
-          true
           ((. cb :error) 
            (core.get result "extension/id") 
            (core.str "content not recognized: " result)))))))
@@ -90,6 +89,7 @@
     (when docker-ai (vim.lsp.stop_client docker-ai false))))
 
 (var registrations {})
+(var streaming? false)
 
 (defn run-prompt [question-id callback prompt]
   "call the docker_lsp lsp to get project context, and then call
@@ -121,15 +121,18 @@
                       :notebookCloses 1
                       :notebookUUID ""
                       :dataTrackTimestamp 0
-                      :stream true}))] 
+                      :stream streaming?}))] 
       (core.println result))))
 
 (defn questions []
   (let [docker-ai-lsp (lsps.get-client-by-name "docker_ai")
         docker-lsp (lsps.get-client-by-name "docker_lsp")]
-    (let [result (. (docker-lsp.request_sync "docker/project-facts" {"vs-machine-id" ""} 60000) :result)]
+    (let [result (. (docker-lsp.request_sync "docker/project-facts" {"vs-machine-id" ""} 60000) :result)
+          result2 (. (docker-ai-lsp.request_sync "questions" {"extension/id" "id"}) :result)]
+      (core.println "questions" result2)
       (core.concat
         (. result :project/potential-questions)
+        (. result2 :content)
         ["Summarize this project" 
          "Can you write a Dockerfile for this project"
          "How do I build this Docker project?"
@@ -215,6 +218,7 @@
 (vim.api.nvim_create_user_command "DockerAIStart" start {:desc "Start the LSPs for Docker AI"})
 (vim.api.nvim_create_user_command "DockerAIStop" stop {:desc "Stop the LSPs for Docker AI"})
 (vim.api.nvim_create_user_command "DockerAIDebug" lsp-debug {:desc "Get some state from the Docker LSP"})
+(vim.api.nvim_create_user_command "DockerAIToggleStreaming" (fn [] (set streaming? (not streaming?)) (core.println "now set to " streaming?)) {:desc "Toggle Streaming for Docker AI"})
 
 (defn tail_server_info []
   (let [clients (vim.lsp.get_active_clients)]

@@ -41,9 +41,9 @@ local function prompt_handler(cb)
       if (core.get(content, "complete") or core.get(content, "function_call") or core.get(content, "content")) then
         return cb.content(core.get(result, "extension/id"), content)
       elseif core.get(result, "extension/id") then
-        return true
-      else
         return cb.error(core.get(result, "extension/id"), core.str("content not recognized: ", result))
+      else
+        return nil
       end
     end
   end
@@ -91,6 +91,7 @@ local function stop()
 end
 _2amodule_2a["stop"] = stop
 local registrations = {}
+local streaming_3f = false
 local function run_prompt(question_id, callback, prompt)
   do local _ = {["fnl/docstring"] = "call Docker AI and register callback for this question identifier", ["fnl/arglist"] = {question_id, callback, prompt}} end
   registrations = core.assoc(registrations, question_id, callback)
@@ -102,7 +103,7 @@ local function run_prompt(question_id, callback, prompt)
     local k = jwt()
     _9_ = {jwt = k, parsedJWT = decode_payload(k)}
   end
-  result = docker_ai_lsp.request_sync("prompt", core.merge((docker_lsp.request_sync("docker/project-facts", {["vs-machine-id"] = ""}, 60000)).result, {["extension/id"] = question_id, question = {prompt = prompt}}, {dockerImagesResult = {}, dockerPSResult = {}, dockerDFResult = {}, dockerCredential = _9_, platform = {arch = "arm64", platform = "darwin", release = "23.0.0"}, vsMachineId = "", isProduction = true, notebookOpens = 1, notebookCloses = 1, notebookUUID = "", dataTrackTimestamp = 0, stream = true}))
+  result = docker_ai_lsp.request_sync("prompt", core.merge((docker_lsp.request_sync("docker/project-facts", {["vs-machine-id"] = ""}, 60000)).result, {["extension/id"] = question_id, question = {prompt = prompt}}, {dockerImagesResult = {}, dockerPSResult = {}, dockerDFResult = {}, dockerCredential = _9_, platform = {arch = "arm64", platform = "darwin", release = "23.0.0"}, vsMachineId = "", isProduction = true, notebookOpens = 1, notebookCloses = 1, notebookUUID = "", dataTrackTimestamp = 0, stream = streaming_3f}))
   return core.println(result)
 end
 _2amodule_2a["run-prompt"] = run_prompt
@@ -110,7 +111,9 @@ local function questions()
   local docker_ai_lsp = lsps["get-client-by-name"]("docker_ai")
   local docker_lsp = lsps["get-client-by-name"]("docker_lsp")
   local result = (docker_lsp.request_sync("docker/project-facts", {["vs-machine-id"] = ""}, 60000)).result
-  return core.concat(result["project/potential-questions"], {"Summarize this project", "Can you write a Dockerfile for this project", "How do I build this Docker project?", "Custom Question"})
+  local result2 = (docker_ai_lsp.request_sync("questions", {["extension/id"] = "id"})).result
+  core.println("questions", result2)
+  return core.concat(result["project/potential-questions"], (result2).content, {"Summarize this project", "Can you write a Dockerfile for this project", "How do I build this Docker project?", "Custom Question"})
 end
 _2amodule_2a["questions"] = questions
 local function into_buffer(prompt)
@@ -188,6 +191,11 @@ _2amodule_2a["lsp-debug"] = lsp_debug
 vim.api.nvim_create_user_command("DockerAIStart", start, {desc = "Start the LSPs for Docker AI"})
 vim.api.nvim_create_user_command("DockerAIStop", stop, {desc = "Stop the LSPs for Docker AI"})
 vim.api.nvim_create_user_command("DockerAIDebug", lsp_debug, {desc = "Get some state from the Docker LSP"})
+local function _24_()
+  streaming_3f = not streaming_3f
+  return core.println("now set to ", streaming_3f)
+end
+vim.api.nvim_create_user_command("DockerAIToggleStreaming", _24_, {desc = "Toggle Streaming for Docker AI"})
 local function tail_server_info()
   local clients = vim.lsp.get_active_clients()
   for n, client in pairs(clients) do
