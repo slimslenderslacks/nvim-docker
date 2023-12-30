@@ -108,8 +108,20 @@
 
 (defn make-buf-runnable []
   (let [bufnr (vim.api.nvim_win_get_buf (. docker-notebook :winnr))]
-    (core.println "making buf runnable")
     (core.println (pcall vim.api.nvim_buf_set_keymap bufnr :n :<leader>run ":lua require('notebook').runBuffer()<CR>" {}))))
+
+(defn resize []
+  "optimize the window sizes for the current notebook tab"
+  ;; table.remove removes the final entry
+  (local wins (vim.api.nvim_tabpage_list_wins (. docker-notebook :nr)))
+  (table.remove wins)
+  (each [_ winnr (pairs wins)]
+    (let [bufnr (vim.api.nvim_win_get_buf winnr)
+          line-count (core.count (vim.api.nvim_buf_get_lines bufnr 0 -1 true))
+          optimum-size (if (< line-count 8) (+ line-count 2) 10)]
+      (vim.api.nvim_win_call 
+        winnr 
+        (fn [] (vim.api.nvim_cmd {:cmd "resize" :args [optimum-size]} {}))))))
 
 (defn append-to-cell [s filetype]
   "Appends content to an existing buffer - resets the buffer filetype (filetype generally shouldn't change)
@@ -118,20 +130,11 @@
         content (string.join "\n" (vim.api.nvim_buf_get_lines bufnr 0 -1 false))
         lines (string.split (core.str content s) "\n")]
     (vim.api.nvim_buf_set_lines bufnr 0 -1 false lines)
-    (vim.api.nvim_buf_call bufnr (fn [] (set vim.bo.filetype filetype)))))
-
-(defn resize []
-  ;; table.remove removes the final entry
-  (local wins (vim.api.nvim_tabpage_list_wins (. docker-notebook :nr)))
-  (table.remove wins)
-  (each [_ winnr (pairs wins)]
-    (let [bufnr (vim.api.nvim_win_get_buf winnr)
-          line-count (+ (core.count (vim.api.nvim_buf_get_lines bufnr 0 -1 true)) 2)]
-      (vim.api.nvim_win_call 
-        winnr 
-        (fn [] (vim.api.nvim_cmd {:cmd "resize" :args [line-count]} {}))))))
+    (vim.api.nvim_buf_call bufnr (fn [] (set vim.bo.filetype filetype)))
+    (resize)))
 
 (defn show-tab-window-buffer []
+  "show coordinates of the current tab/window/buffer"
   (core.println 
     (core.str 
       (vim.api.nvim_get_current_tabpage) "-" 

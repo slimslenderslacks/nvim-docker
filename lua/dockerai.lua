@@ -91,7 +91,7 @@ local function stop()
 end
 _2amodule_2a["stop"] = stop
 local registrations = {}
-local streaming_3f = false
+local streaming_3f = true
 local function run_prompt(question_id, callback, prompt)
   do local _ = {["fnl/docstring"] = "call Docker AI and register callback for this question identifier", ["fnl/arglist"] = {question_id, callback, prompt}} end
   registrations = core.assoc(registrations, question_id, callback)

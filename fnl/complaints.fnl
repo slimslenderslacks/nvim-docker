@@ -23,8 +23,6 @@
                  {:line (if end-line (- end-line 1) (- start-line 1))
                   :character -1}} 
                 :edit edit}]
-    (let [response (docker-lsp.request_sync "docker/complain" params 10000)]
-      (print "docker/complain response")
-      (print response))))
+    (docker-lsp.request "docker/complain" params (fn [err result ctx config]))))
 
 

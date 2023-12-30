@@ -36,9 +36,9 @@ local function complain(_1_)
     _3_ = (start_line - 1)
   end
   params = {uri = {external = ("file://" .. path)}, message = reason, range = {start = {line = core.dec(start_line), character = 0}, ["end"] = {line = _3_, character = -1}}, edit = edit}
-  local response = docker_lsp.request_sync("docker/complain", params, 10000)
-  print("docker/complain response")
-  return print(response)
+  local function _5_(err, result, ctx, config)
+  end
+  return docker_lsp.request("docker/complain", params, _5_)
 end
 _2amodule_2a["complain"] = complain
 return _2amodule_2a

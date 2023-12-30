@@ -89,7 +89,7 @@
     (when docker-ai (vim.lsp.stop_client docker-ai false))))
 
 (var registrations {})
-(var streaming? false)
+(var streaming? true)
 
 (defn run-prompt [question-id callback prompt]
   "call the docker_lsp lsp to get project context, and then call
