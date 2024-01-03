@@ -75,20 +75,26 @@
         (configure-buffer bufnr))
       bufnr)
     (do
+      (when (not (vim.api.nvim_win_is_valid (. docker-notebook :winnr)))
+        (set docker-notebook (core.assoc docker-notebook
+                                         :winnr (core.last (vim.api.nvim_tabpage_list_wins (. docker-notebook :nr))))))
       ;; TODO optionally switch to the buffer
       ;;(vim.api.nvim_set_current_tabpage (. docker-notebook :nr))
-      (when (. docker-notebook :winnr)
+      
         ;; TODO is this necessary?
-        (vim.api.nvim_set_current_win (. docker-notebook :winnr))
-        (vim.api.nvim_cmd {:cmd "sp"} {})
-        (set docker-notebook 
-                 (core.assoc docker-notebook 
-                             :winnr (vim.api.nvim_get_current_win)))
-        (if (and path language-id)
-          (do 
-            (vim.api.nvim_cmd {:cmd "edit" :args [path]} {})
-            (vim.api.nvim_get_current_buf))
-          (add-cell-buffer))))))
+      (vim.api.nvim_set_current_win (. docker-notebook :winnr))
+      (vim.api.nvim_cmd {:cmd "sp"} {})
+      (set docker-notebook 
+           (core.assoc docker-notebook 
+                       :winnr (vim.api.nvim_get_current_win)))
+      (if (and path language-id)
+        (do 
+          (vim.api.nvim_cmd {:cmd "edit" :args [path]} {})
+          (vim.api.nvim_get_current_buf))
+        (add-cell-buffer)))))
+
+;; what are some Docker Official Images for mysql that have more than 3 stars?
+;; can you classify the mysql image for me?  Break it down based on who should use it and why they would use it.
 
 (defn bottom-terminal [cmd]
   "split current window, create a term buffer in the split window, 
@@ -108,7 +114,21 @@
 
 (defn make-buf-runnable []
   (let [bufnr (vim.api.nvim_win_get_buf (. docker-notebook :winnr))]
-    (core.println (pcall vim.api.nvim_buf_set_keymap bufnr :n :<leader>run ":lua require('notebook').runBuffer()<CR>" {}))))
+    (vim.api.nvim_buf_set_keymap bufnr :n :<leader>run ":lua require('notebook').runBuffer()<CR>" {})))
+
+(defn make-prompt-buf-runnable []
+  (let [bufnr (vim.api.nvim_win_get_buf (. docker-notebook :winnr))]
+    (vim.api.nvim_buf_set_keymap bufnr :n :<leader>run ":lua require('dockerai').runBufferPrompt()<CR>" {})))
+
+(defn create-buffer-question []
+  (notebook-add-cell {:language-id "dockerai"}) 
+  (vim.api.nvim_buf_call (vim.api.nvim_win_get_buf (. docker-notebook :winnr)) (fn [] (set vim.bo.filetype "dockerai")))
+  (make-prompt-buf-runnable))
+
+(defn create-shell-script []
+  (notebook-add-cell {:language-id "shellscript"}) 
+  (vim.api.nvim_buf_call (vim.api.nvim_win_get_buf (. docker-notebook :winnr)) (fn [] (set vim.bo.filetype "shellscript")))
+  (make-buf-runnable))
 
 (defn resize []
   "optimize the window sizes for the current notebook tab"
@@ -143,9 +163,33 @@
       (vim.api.nvim_win_get_cursor (vim.api.nvim_get_current_win)) "\n"
       docker-notebook)))
 
+;; log buffer is unlisted and is a scratch buffer
+(var log-buffer (vim.api.nvim_create_buf true true))
+(var log-window nil)
+(vim.api.nvim_buf_set_name log-buffer "dockerai.log")
+(vim.api.nvim_buf_set_option log-buffer "buftype" "nowrite")
+(defn append-to-log [lines]
+  (vim.api.nvim_buf_set_lines 
+    log-buffer 
+    (core.count (vim.api.nvim_buf_get_lines log-buffer 0 -1 false)) 
+    -1 false lines))
+
+(defn toggle-log []
+  (if log-window
+    (do
+      (vim.api.nvim_win_close log-window true)
+      (set log-window nil))
+    (do
+      (vim.api.nvim_cmd {:cmd "vsplit"} {})
+      (set log-window (vim.api.nvim_get_current_win)))))
+
 (vim.api.nvim_create_user_command "NotebookAddCell" (partial notebook-add-cell {}) {:nargs 0})
 (vim.api.nvim_create_user_command "NotebookCoordinates" show-tab-window-buffer {:nargs 0})
-(vim.api.nvim_create_user_command "NotebookResize" resize {:nargs 0})
+(vim.api.nvim_create_user_command "NotebookResize" resize {:nargs 0}) 
+(vim.api.nvim_create_user_command "NotebookAddPromptCell" create-buffer-question {:nargs 0})
+(vim.api.nvim_create_user_command "NotebookAddShellScript" create-shell-script {:nargs 0})
+(vim.api.nvim_create_user_command "NotebookToggleLog" toggle-log {:nargs 0})
+(nvim.set_keymap :n :<leader>log ":NotebookToggleLog<CR>" {})
 
 (defn flush-function-call []
   "flush current command"
@@ -153,8 +197,9 @@
     (let [{:name name :arguments args} (. docker-notebook :current-function-call)
           ;; are these sometimes ready without parsing
           arguments (if (core.table? args) args (vim.json.decode args))]
-      (core.println "--- call function " name)
-      (core.println "--- arguments " arguments)
+      (append-to-log [(core.str "--- call function " name)])
+      (append-to-log (core.concat [(core.str "--- arguments ")]
+                                  (string.split (core.str arguments) "\n")))
       (if
         (or
           (= name "cell-execution")
@@ -170,7 +215,7 @@
               ;; read contents of file into cmp_buffer
               (notebook-add-cell {:path path :language-id language-id})]
           ;; TODO if the file doesn't exist, populate it!
-          (core.println "do it" (pcall vim.api.nvim_buf_set_lines bufnr 0 0 false (string.split edit "\n")))
+          (core.println (pcall vim.api.nvim_buf_set_lines bufnr 0 0 false (string.split edit "\n")))
           ;; TODO add complaint back
           ;; (complaints.complain arguments)
           )

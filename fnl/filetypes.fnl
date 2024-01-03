@@ -5,7 +5,9 @@
     {:filename
      {"compose.yaml" "dockercompose"
       ".dockerignore" "dockerignore"}})
-
   (vim.filetype.add
     {:extension 
-     {:shellscript "shellscript"}}))
+     {:shellscript "shellscript"}})
+  (vim.filetype.add
+    {:extension 
+     {:shellscript "dockerai"}}))

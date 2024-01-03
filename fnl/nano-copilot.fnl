@@ -4,7 +4,6 @@
              str aniseed.string
              util slim.nvim
              curl plenary.curl
-             dockerai dockerai
              lsps lsps}
    require {dockerai dockerai}})
 

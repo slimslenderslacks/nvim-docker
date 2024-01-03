@@ -11,13 +11,13 @@ do
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
 local autoload = (require("aniseed.autoload")).autoload
-local core, lsps, notebook, nvim, string, util = autoload("aniseed.core"), autoload("lsps"), autoload("notebook"), autoload("aniseed.nvim"), autoload("aniseed.string"), autoload("slim.nvim")
+local core, lsps, nvim, string, util, notebook = autoload("aniseed.core"), autoload("lsps"), autoload("aniseed.nvim"), autoload("aniseed.string"), autoload("slim.nvim"), require("notebook")
 do end (_2amodule_locals_2a)["core"] = core
 _2amodule_locals_2a["lsps"] = lsps
-_2amodule_locals_2a["notebook"] = notebook
 _2amodule_locals_2a["nvim"] = nvim
 _2amodule_locals_2a["string"] = string
 _2amodule_locals_2a["util"] = util
+_2amodule_locals_2a["notebook"] = notebook
 vim.lsp.set_log_level("TRACE")
 local use_nix_3f = true
 _2amodule_2a["use-nix?"] = use_nix_3f
@@ -104,7 +104,7 @@ local function run_prompt(question_id, callback, prompt)
     _9_ = {jwt = k, parsedJWT = decode_payload(k)}
   end
   result = docker_ai_lsp.request_sync("prompt", core.merge((docker_lsp.request_sync("docker/project-facts", {["vs-machine-id"] = ""}, 60000)).result, {["extension/id"] = question_id, question = {prompt = prompt}}, {dockerImagesResult = {}, dockerPSResult = {}, dockerDFResult = {}, dockerCredential = _9_, platform = {arch = "arm64", platform = "darwin", release = "23.0.0"}, vsMachineId = "", isProduction = true, notebookOpens = 1, notebookCloses = 1, notebookUUID = "", dataTrackTimestamp = 0, stream = streaming_3f}))
-  return core.println(result)
+  return notebook["append-to-log"](string.split(core.str(result), "\n"))
 end
 _2amodule_2a["run-prompt"] = run_prompt
 local function questions()
@@ -112,7 +112,6 @@ local function questions()
   local docker_lsp = lsps["get-client-by-name"]("docker_lsp")
   local result = (docker_lsp.request_sync("docker/project-facts", {["vs-machine-id"] = ""}, 60000)).result
   local result2 = (docker_ai_lsp.request_sync("questions", {["extension/id"] = "id"})).result
-  core.println("questions", result2)
   return core.concat(result["project/potential-questions"], (result2).content, {"Summarize this project", "Can you write a Dockerfile for this project", "How do I build this Docker project?", "Custom Question"})
 end
 _2amodule_2a["questions"] = questions
@@ -132,21 +131,26 @@ local function into_buffer(prompt)
     return notebook["docker-ai-content-handler"](extension_id, message)
   end
   local function _13_(_, message)
-    return core.println(core.str("error: ", message))
+    return notebook["append-to-log"](core.concat({core.str("ERROR: ")}, string.split(core.str(message), "\n")))
   end
   local function _14_(id, message)
-    return core.println(core.str("finished prompt ", prompt), id)
+    return notebook["append-to-log"](core.concat({core.str("finished prompt ", id)}, lines))
   end
   return run_prompt(util.uuid(), {content = _11_, error = _13_, exit = _14_}, prompt)
 end
 _2amodule_2a["into-buffer"] = into_buffer
+local function runBufferPrompt()
+  local bufnr = vim.api.nvim_get_current_buf()
+  return core.println(pcall(into_buffer, string.join("\n", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))))
+end
+_2amodule_2a["runBufferPrompt"] = runBufferPrompt
 local function start()
   local cb
   local function _15_(id, message)
     return registrations[id].exit(id, message)
   end
   local function _16_(id, message)
-    return core.println(id, message)
+    return notebook["append-to-log"](core.concat({core.str("ERROR: ", id, " - ")}, string.split(core.str(message), "\n")))
   end
   local function _17_(id, message)
     return registrations[id].content(id, message)

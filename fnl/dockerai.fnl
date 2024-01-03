@@ -3,8 +3,8 @@
              core aniseed.core
              string aniseed.string
              util slim.nvim
-             lsps lsps
-             notebook notebook}})
+             lsps lsps}
+   require {notebook notebook}})
 
 (vim.lsp.set_log_level "TRACE")
 (def use-nix? true)
@@ -122,14 +122,13 @@
                       :notebookUUID ""
                       :dataTrackTimestamp 0
                       :stream streaming?}))] 
-      (core.println result))))
+      (notebook.append-to-log (string.split (core.str result) "\n")))))
 
 (defn questions []
   (let [docker-ai-lsp (lsps.get-client-by-name "docker_ai")
         docker-lsp (lsps.get-client-by-name "docker_lsp")]
     (let [result (. (docker-lsp.request_sync "docker/project-facts" {"vs-machine-id" ""} 60000) :result)
           result2 (. (docker-ai-lsp.request_sync "questions" {"extension/id" "id"}) :result)]
-      (core.println "questions" result2)
       (core.concat
         (. result :project/potential-questions)
         (. result2 :content)
@@ -155,9 +154,15 @@
          (when (vim.api.nvim_win_is_valid win)
            (vim.api.nvim_win_close win true))
          (notebook.docker-ai-content-handler extension-id message))
-       :error (fn [_ message] (core.println (core.str "error: " message)))
-       :exit (fn [id message] (core.println (core.str "finished prompt " prompt) id))}        
+       :error (fn [_ message] (notebook.append-to-log (core.concat [(core.str "ERROR: ")]
+                                                                   (string.split (core.str message) "\n"))))
+       :exit (fn [id message] (notebook.append-to-log (core.concat [(core.str "finished prompt " id)]
+                                                                   lines)))}        
       prompt)))
+
+(defn runBufferPrompt []
+  (let [bufnr (vim.api.nvim_get_current_buf)]
+    (core.println (pcall into-buffer (string.join "\n" (vim.api.nvim_buf_get_lines bufnr 0 -1 false))))))
 
 (defn start []
   (let [cb {:exit (fn [id message]
@@ -165,7 +170,8 @@
                     ;; TODO remove the handler
                     )
             :error (fn [id message]
-                     (core.println id message))
+                     (notebook.append-to-log (core.concat [(core.str "ERROR: " id " - ")]
+                                                          (string.split (core.str message) "\n"))))
             :content (fn [id message]
                        ((. (. registrations id) :content) id message))}]
     (start-lsps
@@ -184,8 +190,6 @@
   {:exit (fn [id message] (update-buf buf [id (vim.json.encode message) "----" ""]))
    :error (fn [id message] (update-buf buf [id (vim.json.encode message) "----" ""]))
    :content (fn [id message] (update-buf buf [id (vim.json.encode message) "----" ""]))})
-
-
 
 (comment
   (def buf (vim.api.nvim_create_buf true true))

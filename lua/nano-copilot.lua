@@ -11,15 +11,14 @@ do
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
 local autoload = (require("aniseed.autoload")).autoload
-local core, curl, dockerai, lsps, nvim, str, util, dockerai0 = autoload("aniseed.core"), autoload("plenary.curl"), autoload("dockerai"), autoload("lsps"), autoload("aniseed.nvim"), autoload("aniseed.string"), autoload("slim.nvim"), require("dockerai")
+local core, curl, lsps, nvim, str, util, dockerai = autoload("aniseed.core"), autoload("plenary.curl"), autoload("lsps"), autoload("aniseed.nvim"), autoload("aniseed.string"), autoload("slim.nvim"), require("dockerai")
 do end (_2amodule_locals_2a)["core"] = core
 _2amodule_locals_2a["curl"] = curl
-_2amodule_locals_2a["dockerai"] = dockerai0
 _2amodule_locals_2a["lsps"] = lsps
 _2amodule_locals_2a["nvim"] = nvim
 _2amodule_locals_2a["str"] = str
 _2amodule_locals_2a["util"] = util
-_2amodule_locals_2a["dockerai"] = dockerai0
+_2amodule_locals_2a["dockerai"] = dockerai
 local function open(lines)
   local buf = vim.api.nvim_create_buf(false, true)
   nvim.buf_set_text(buf, 0, 0, 0, 0, lines)
@@ -54,16 +53,16 @@ _2amodule_2a["copilot"] = copilot
 nvim.set_keymap("v", "<leader>ai", ":lua require('nano-copilot').copilot()<CR>", {})
 --[[ (lsps.list) (dockerai.into-buffer "Summarize this project") (dockerai.into-buffer "Write a compose file with php and mysql server") ]]
 local function dockerCopilot()
-  local prompts = dockerai0.questions()
+  local prompts = dockerai.questions()
   local function _3_(item)
     return item:gsub("_", " ")
   end
   local function _4_(selected, _)
     if (selected == "Custom Question") then
       local q = vim.fn.input("Custom Question: ")
-      return dockerai0["into-buffer"](q)
+      return dockerai["into-buffer"](q)
     else
-      return dockerai0["into-buffer"](selected)
+      return dockerai["into-buffer"](selected)
     end
   end
   return vim.ui.select(prompts, {prompt = "Select a prompt:", format = _3_}, _4_)
