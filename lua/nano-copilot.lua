@@ -11,7 +11,7 @@ do
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
 local autoload = (require("aniseed.autoload")).autoload
-local core, curl, lsps, nvim, str, util, dockerai = autoload("aniseed.core"), autoload("plenary.curl"), autoload("lsps"), autoload("aniseed.nvim"), autoload("aniseed.string"), autoload("slim.nvim"), require("dockerai")
+local core, curl, lsps, nvim, str, util, dockerai, job = autoload("aniseed.core"), autoload("plenary.curl"), autoload("lsps"), autoload("aniseed.nvim"), autoload("aniseed.string"), autoload("slim.nvim"), require("dockerai"), require("plenary.job")
 do end (_2amodule_locals_2a)["core"] = core
 _2amodule_locals_2a["curl"] = curl
 _2amodule_locals_2a["lsps"] = lsps
@@ -19,6 +19,7 @@ _2amodule_locals_2a["nvim"] = nvim
 _2amodule_locals_2a["str"] = str
 _2amodule_locals_2a["util"] = util
 _2amodule_locals_2a["dockerai"] = dockerai
+_2amodule_locals_2a["job"] = job
 local function open(lines)
   local buf = vim.api.nvim_create_buf(false, true)
   nvim.buf_set_text(buf, 0, 0, 0, 0, lines)
@@ -34,7 +35,7 @@ local function ollama(system_prompt, prompt, cb)
   local function _1_(_, chunk, _0)
     return cb(vim.json.decode(chunk).response)
   end
-  return curl.post("http://localhost:11434/api/generate", {body = vim.json.encode({model = "mistral", prompt = prompt, system = system_prompt, stream = true}), stream = _1_})
+  return curl.post("http://localhost:11434/api/generate", {body = vim.json.encode({model = "llama2", prompt = prompt, system = system_prompt, stream = true}), stream = _1_})
 end
 _2amodule_2a["ollama"] = ollama
 local function execute_prompt(prompt)
@@ -44,20 +45,45 @@ local function execute_prompt(prompt)
   return util["stream-into-buffer"](_2_, prompt)
 end
 _2amodule_2a["execute-prompt"] = execute_prompt
+local function execute_rag_prompt(prompt)
+  local function _3_(prompt0, cb)
+    local j
+    local function _4_(_, line)
+      return cb(line)
+    end
+    local function _5_(_, line)
+      return cb(line)
+    end
+    local function _6_()
+    end
+    j = job:new({command = "/Users/slim/slimslenderslacks/hackathon/bin/python3", args = {"rag.py", prompt0}, on_stdout = _4_, on_stderr = _5_, on_exit = _6_})
+    return job.start(j)
+  end
+  return util["stream-into-buffer"](_3_, prompt)
+end
+_2amodule_2a["execute-rag-prompt"] = execute_rag_prompt
 --[[ (execute-prompt "What does a Dockerfile look like?") (vim.fn.input "Question: ") ]]
 local function copilot()
-  local prompt = ("I have a question about this: " .. vim.fn.input("Question: ") .. "\n\n Here is the code:\n```\n" .. str.join("\n", util["get-current-buffer-selection"]()) .. "\n```\n")
-  return execute_prompt(prompt)
+  local prompts = {"run base LLM", "run augmented LLM"}
+  local function _7_(selected, _)
+    local prompt = ("I have a question about this: " .. vim.fn.input("Question: ") .. "\n\n Here is the code:\n```\n" .. str.join("\n", util["get-current-buffer-selection"]()) .. "\n```\n")
+    if (selected == "run base LLM") then
+      return execute_prompt(prompt)
+    else
+      return execute_rag_prompt(prompt)
+    end
+  end
+  return vim.ui.select(prompts, {prompt = "Select LLM"}, _7_)
 end
 _2amodule_2a["copilot"] = copilot
 nvim.set_keymap("v", "<leader>ai", ":lua require('nano-copilot').copilot()<CR>", {})
 --[[ (lsps.list) (dockerai.into-buffer "Summarize this project") (dockerai.into-buffer "Write a compose file with php and mysql server") ]]
 local function dockerCopilot()
   local prompts = dockerai.questions()
-  local function _3_(item)
+  local function _9_(item)
     return item:gsub("_", " ")
   end
-  local function _4_(selected, _)
+  local function _10_(selected, _)
     if (selected == "Custom Question") then
       local q = vim.fn.input("Custom Question: ")
       return dockerai["into-buffer"](q)
@@ -65,7 +91,7 @@ local function dockerCopilot()
       return dockerai["into-buffer"](selected)
     end
   end
-  return vim.ui.select(prompts, {prompt = "Select a prompt:", format = _3_}, _4_)
+  return vim.ui.select(prompts, {prompt = "Select a prompt:", format = _9_}, _10_)
 end
 _2amodule_2a["dockerCopilot"] = dockerCopilot
 nvim.set_keymap("n", "<leader>ai", ":lua require('nano-copilot').dockerCopilot()<CR>", {})

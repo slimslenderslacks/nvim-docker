@@ -2,19 +2,12 @@
   {autoload {nvim aniseed.nvim
              core aniseed.core
              string aniseed.string
-             util slim.nvim
-             lsps lsps}
-   require {notebook notebook}})
+             util slim.nvim}
+   require {notebook notebook
+            lsps lsps}})
 
+;; TODO not a good default
 (vim.lsp.set_log_level "TRACE")
-(def use-nix? true)
-
-(defn jwt []
-  (let [p (vim.system 
-            ["docker-credential-desktop" "get"] 
-            {:text true :stdin "https://index.docker.io/v1//access-token"})
-        obj (p:wait)]
-    (. (vim.json.decode (. obj :stdout)) :Secret)))
 
 (defn decode-payload [s]
   (vim.json.decode
@@ -23,6 +16,7 @@
 (comment
   (decode-payload (jwt)))
 
+; creates a docker-ai lsp $prompt notification handler with a custom callback
 ;err - error info dict or nil
 ;result - result key of the lsp response
 ;ctx - table of calling states
@@ -51,6 +45,7 @@
            (core.get result "extension/id") 
            (core.str "content not recognized: " result)))))))
 
+; creates a docker ai lsp $exit notification handler with a custom callback
 (defn exit-handler [cb]
   "returns a handler for lsp $/exit callbacks"
   (fn [err result ctx config]
@@ -60,26 +55,16 @@
       ;; will have extension/id and exit
       ((. cb :exit) (core.get result "extension/id") result))))
 
-(defn jwt-handler [err result ctx config]
-  "handler for lsps that need a jwt"
-  (if err
-    (core.println "jwt err: " err))
-  (jwt))
+(nvim.set_keymap :v :<leader>ai ":lua require('copilot').openselection()<CR>" {})
 
 (defn start-lsps [prompt-handler exit-handler]
   "start both docker_ai and docker_lsp services"
   (let [root-dir ;; TODO (util.git-root)
           (vim.fn.getcwd)
-        extra-handlers {"docker/jwt" jwt-handler}]
-    (vim.lsp.start {:name "docker_ai"
-                    :cmd ["docker" "run"
-                          "--rm" "--init" "--interactive"
-                          "docker/labs-assistant-ml:staging"]
-                    :root_dir root-dir
-                    :handlers (core.merge 
-                                {"$/prompt" prompt-handler
-                                 "$/exit" exit-handler}
-                                extra-handlers)})
+        extra-handlers {"docker/jwt" lsps.jwt-handler
+                        "$terminal/run" lsps.terminal-run-handler
+                        "$bind/run" lsps.terminal-bind-handler}]
+    (lsps.start-dockerai-lsp root-dir extra-handlers prompt-handler exit-handler)
     (lsps.start root-dir extra-handlers)))
 
 (defn stop []
@@ -91,7 +76,8 @@
 (var registrations {})
 (var streaming? true)
 
-(defn run-prompt [question-id callback prompt]
+(defn run-prompt 
+  [question-id callback prompt]
   "call the docker_lsp lsp to get project context, and then call
      the docker_ai lsp with the context and the prompt
      The callback must understand the $/prompt notification"
@@ -161,6 +147,7 @@
       prompt)))
 
 (defn runBufferPrompt []
+  "run a prompt using the contents of the current buffer"
   (let [bufnr (vim.api.nvim_get_current_buf)]
     (core.println (pcall into-buffer (string.join "\n" (vim.api.nvim_buf_get_lines bufnr 0 -1 false))))))
 
@@ -201,8 +188,7 @@
   (run-prompt "18" (callback buf) "Can you write a Dockerfile for this project?")
   (run-prompt "19" (callback buf) "Summarize this project")
   (run-prompt "21" (callback buf) "How do I dockerize my project")
-  (run-prompt "22" (callback buf) "How do I build this Docker project?")
-  )
+  (run-prompt "22" (callback buf) "How do I build this Docker project?"))
 
 (defn lsp-debug [_]
   (vim.ui.select

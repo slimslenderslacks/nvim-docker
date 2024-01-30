@@ -164,7 +164,7 @@
       docker-notebook)))
 
 ;; log buffer is unlisted and is a scratch buffer
-(var log-buffer (vim.api.nvim_create_buf true true))
+(var log-buffer (vim.api.nvim_create_buf false true))
 (var log-window nil)
 (vim.api.nvim_buf_set_name log-buffer "dockerai.log")
 (vim.api.nvim_buf_set_option log-buffer "buftype" "nowrite")

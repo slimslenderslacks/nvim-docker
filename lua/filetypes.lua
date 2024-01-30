@@ -12,8 +12,7 @@ do
 end
 local function init()
   vim.filetype.add({filename = {["compose.yaml"] = "dockercompose", [".dockerignore"] = "dockerignore"}})
-  vim.filetype.add({extension = {shellscript = "shellscript"}})
-  return vim.filetype.add({extension = {shellscript = "dockerai"}})
+  return vim.filetype.add({extension = {shellscript = "shellscript"}})
 end
 _2amodule_2a["init"] = init
 return _2amodule_2a

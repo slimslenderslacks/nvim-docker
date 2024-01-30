@@ -5,7 +5,8 @@
              util slim.nvim
              curl plenary.curl
              lsps lsps}
-   require {dockerai dockerai}})
+   require {dockerai dockerai
+            job plenary.job}})
 
 (defn open [lines]
   (let [buf (vim.api.nvim_create_buf false true)]
@@ -25,7 +26,7 @@
 (defn ollama [system-prompt prompt cb]
   (curl.post 
     "http://localhost:11434/api/generate"
-    {:body (vim.json.encode {:model "mistral"
+    {:body (vim.json.encode {:model "llama2"
                              :prompt prompt
                              :system system-prompt 
                              :stream true})
@@ -35,6 +36,18 @@
 (defn execute-prompt [prompt]
   (util.stream-into-buffer (partial ollama "") prompt))
 
+(defn execute-rag-prompt [prompt]
+  (util.stream-into-buffer
+    (fn [prompt cb]
+      (let [j (job:new 
+                {:command "/Users/slim/slimslenderslacks/hackathon/bin/python3"
+                 :args ["rag.py" prompt]
+                 :on_stdout (fn [_ line] (cb line))
+                 :on_stderr (fn [_ line] (cb line))
+                 :on_exit (fn [])})]
+        (job.start j)))
+    prompt))
+
 (comment
   (execute-prompt "What does a Dockerfile look like?")
   (vim.fn.input "Question: "))
@@ -42,13 +55,22 @@
 ;; ----------
 
 (defn copilot []
-  (let [prompt (..
-                 "I have a question about this: "
-                 (vim.fn.input "Question: ")       
-                 "\n\n Here is the code:\n```\n"
-                 (str.join "\n" (util.get-current-buffer-selection))
-                 "\n```\n")]
-    (execute-prompt prompt)))
+  (let [prompts ["run base LLM"
+                 "run augmented LLM"]]
+    (vim.ui.select
+      prompts
+      {:prompt "Select LLM"}
+      (fn [selected _]
+        (let [prompt (..
+                       "I have a question about this: "
+                       (vim.fn.input "Question: ")       
+                       "\n\n Here is the code:\n```\n"
+                       (str.join "\n" (util.get-current-buffer-selection))
+                       "\n```\n")]
+          (if 
+            (= selected "run base LLM")
+            (execute-prompt prompt) 
+            (execute-rag-prompt prompt)))))))
 
 (nvim.set_keymap :v :<leader>ai ":lua require('nano-copilot').copilot()<CR>" {})
 

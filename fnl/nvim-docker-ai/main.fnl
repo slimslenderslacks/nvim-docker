@@ -2,8 +2,10 @@
   {require {dockerai dockerai
             filetypes filetypes
             nano-copilot nano-copilot
-            core aniseed.core}})
+            core aniseed.core
+            lsps lsps}})
 
 (defn init []
-  (core.println "initialize docker ai")
   (filetypes.init))
+
+(defn after [])

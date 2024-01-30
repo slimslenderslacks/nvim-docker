@@ -168,7 +168,7 @@ local function show_tab_window_buffer()
   return core.println(core.str(vim.api.nvim_get_current_tabpage(), "-", vim.api.nvim_get_current_win(), "-", vim.api.nvim_get_current_buf(), "\n", vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win()), "\n", docker_notebook))
 end
 _2amodule_2a["show-tab-window-buffer"] = show_tab_window_buffer
-local log_buffer = vim.api.nvim_create_buf(true, true)
+local log_buffer = vim.api.nvim_create_buf(false, true)
 local log_window = nil
 vim.api.nvim_buf_set_name(log_buffer, "dockerai.log")
 vim.api.nvim_buf_set_option(log_buffer, "buftype", "nowrite")

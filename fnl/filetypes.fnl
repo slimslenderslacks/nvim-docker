@@ -8,6 +8,7 @@
   (vim.filetype.add
     {:extension 
      {:shellscript "shellscript"}})
-  (vim.filetype.add
-    {:extension 
-     {:shellscript "dockerai"}}))
+  ;(vim.filetype.add
+    ;{:extension 
+     ;{:shellscript "dockerai"}})
+  )
