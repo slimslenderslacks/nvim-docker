@@ -1,0 +1,10 @@
+
+21
+{"function_call":{"name":"create-notebook","arguments":{"notebook":"docker_init","reason":"project is not dockerized","cells":{"cells":[{"kind":1,"languageId":"markdown","value":"## Dockerize Your Project\nGet started with our pre-populated `docker init`"},{"kind":2,"languageId":"shellscript","value":"docker init"},{"kind":1,"languageId":"markdown","value":"Run your container initialized from `docker init`"},{"kind":2,"languageId":"shellscript","value":"# --build forces a fresh build; -d runs in detached mode and is required for Docker AI recommendations\ndocker compose up --build -d"}]}}}}
+----
+21
+{"complete":true}
+----
+21
+{"exit":0,"extension\/id":"21"}
+----

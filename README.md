@@ -31,6 +31,9 @@ require('lazy').setup(
 )
 ```
 
+This does not rely on [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) to manage the LSP, but it does require a recent version of neovim.  I current use `v0.10.0-dev-80f75d0` but anything greater than 0.9.0 should work.  
+In my opinion, nvim-lspconfig is becoming less and less useful as the core `lsp` support in neovim has improved.  
+
 ### Using Ollama
 
 If you have [Ollama installed](https://ollama.ai/) installed and running, Docker AI

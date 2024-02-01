@@ -32,8 +32,13 @@
     (set commands (core.assoc commands code s))
     code))
 
-(defn runInTerminal [code]
-  (run-in-terminal (. commands code)))
+(defn runInTerminal []
+  (vim.ui.select
+    (core.keys commands)
+    {:prompt "Select a command:"}
+    (fn [command _]
+      (when command
+        (run-in-terminal (. commands command))))))
 
 ; lsp $terminal/run request handler
 (defn terminal-run-handler [err result ctx config]
@@ -43,13 +48,21 @@
   (core.println "terminal-run" result)
   (run-in-terminal (. result :content)))
 
-; lsp $binding/run request handler
 (defn terminal-bind-handler [err result ctx config]
   "handler for lsps that request some content"
   (if err
     (core.println "terminal-bind err: " err))
   (let [id (register-content (. result :content))]
     (vim.api.nvim_set_keymap :n (.. "<leader>" (vim.fn.input "Please enter a binding: ")) (.. ":lua require('lsps').runInTerminal( '" id "' )<CR>") {})))
+
+(defn terminal-registration-handler [err result ctx config]
+  (set commands {})
+  (->> (. result :blocks)
+       (core.map (fn [m] 
+                   (set commands 
+                     (core.assoc commands (. m :command) (. m :script)))))))
+
+(vim.api.nvim_set_keymap :n  ",run" (.. ":lua require('lsps').runInTerminal()<CR>") {})
 
 ; docker ai lsp docker/jwt request handler (both lsps)
 (defn jwt-handler [err result ctx config]
@@ -168,7 +181,8 @@
                           (vim.fn.getcwd)
                           {"docker/jwt" jwt-handler
                            "$terminal/run" terminal-run-handler
-                           "$bind/run" terminal-bind-handler}))
+                           "$bind/run" terminal-bind-handler
+                           "$bind/register" terminal-registration-handler}))
                       ;; don't delete the autocmd
                       false))})
 

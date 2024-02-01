@@ -1,0 +1,205 @@
+
+22
+{"function_call":{"name":"cell-execution","arguments":""},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"{\n"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" "},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" \""},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"command"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"\":"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" \""},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"docker"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" build"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" -"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"t"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" an"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"ise"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"ed"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"-n"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"vim"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":":"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"latest"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" deps"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"\/an"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"ise"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"ed"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"\/."},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"circle"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"ci"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"\",\n"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" "},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" \""},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"language"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"Id"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"\":"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" \""},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"shell"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"script"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"\",\n"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" "},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" \""},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"reason"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"\":"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" \""},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"To"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" build"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" the"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" Docker"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" project"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":","},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" use"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" the"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" '"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"docker"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" build"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"'"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" command"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" specifying"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" the"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" tag"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" and"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" the"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" path"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" to"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" the"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" Docker"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"file"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":" directory"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":".\"\n"},"metadata":{"id":1853119328}}
+----
+22
+{"function_call":{"arguments":"}"},"metadata":{"id":1853119328}}
+----
+22
+{"complete":true}
+----
+22
+{"exit":0,"extension\/id":"22"}
+----

@@ -1,0 +1,664 @@
+
+18
+{"complete":true}
+----
+18
+{"exit":0,"extension\/id":"18"}
+----
+18
+{"complete":true}
+----
+18
+{"exit":0,"extension\/id":"18"}
+----
+18
+{"function_call":{"name":"update-file","arguments":""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"{\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"path"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\":"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"D"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"ocker"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"file"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\",\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"language"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"Id"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\":"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"docker"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"file"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\",\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"start"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"Line"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\":"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"0"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":",\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"edit"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\":"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"FROM"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" c"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"img"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/base"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":":"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"202"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"0"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"."},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"01"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"#"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" Create"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" directories"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"RUN"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" mkdir"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" -"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"p"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" ~\/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"bin"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" ~\/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"nv"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"#"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" Install"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" Ne"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"ov"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"RUN"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" cd"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" ~\/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"nv"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" &&"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\\\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"   "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" curl"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" -"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"L"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" https"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":":\/\/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"github"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":".com"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/ne"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"ov"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/ne"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"ov"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/releases"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/download"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/v"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"0"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"."},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"5"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"."},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"0"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"vim"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":".app"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"image"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" -"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"o"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" nv"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":".app"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"image"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" &&"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\\\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"   "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" chmod"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" +"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"x"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" .\/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"nv"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":".app"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"image"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" &&"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\\\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"   "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" .\/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"nv"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":".app"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"image"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" --"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"app"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"image"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"-ex"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"tract"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" &&"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\\\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"   "},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" ln"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" -"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"s"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" ~\/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"nv"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/s"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"qu"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"ash"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"fs"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"-root"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/usr"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/bin"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"vim"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" ~\/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"bin"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"vim"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"#"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" Set"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" PATH"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" to"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" include"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" custom"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" bin"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"ENV"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" PATH"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"=\\\"$"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"HOME"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\/bin"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":":$"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"PATH"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\\"\\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"#"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" Set"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" the"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" working"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" directory"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"WORK"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"DIR"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" \/"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"project"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"#"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" Your"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" project"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" specific"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" commands"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" here"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"...\\"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"#"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" Finally"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":","},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" define"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" the"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" default"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" command"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"CMD"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":" ["},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\\""},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"nv"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"im"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\\\"]"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"\"\n"},"metadata":{"id":9152702557}}
+----
+18
+{"function_call":{"arguments":"}"},"metadata":{"id":9152702557}}
+----
+18
+{"complete":true}
+----
+18
+{"exit":0,"extension\/id":"18"}
+----
