@@ -177,14 +177,20 @@ local function lsp_debug(_)
   return vim.ui.select({"documents", "project-context", "tracking-data", "login", "alpine-packages", "repositories", "client-settings"}, {prompt = "Select a prompt:", format = _21_}, _22_)
 end
 _2amodule_2a["lsp-debug"] = lsp_debug
+local function setup(_23_)
+  local _arg_24_ = _23_
+  local cb = _arg_24_["attach"]
+  return lsps.setup(cb)
+end
+_2amodule_2a["setup"] = setup
 vim.api.nvim_create_user_command("DockerAIStart", start, {desc = "Start the LSPs for Docker AI"})
 vim.api.nvim_create_user_command("DockerAIStop", stop, {desc = "Stop the LSPs for Docker AI"})
 vim.api.nvim_create_user_command("DockerAIDebug", lsp_debug, {desc = "Get some state from the Docker LSP"})
-local function _23_()
+local function _25_()
   streaming_3f = not streaming_3f
   return core.println("now set to ", streaming_3f)
 end
-vim.api.nvim_create_user_command("DockerAIToggleStreaming", _23_, {desc = "Toggle Streaming for Docker AI"})
+vim.api.nvim_create_user_command("DockerAIToggleStreaming", _25_, {desc = "Toggle Streaming for Docker AI"})
 local function tail_server_info()
   local clients = vim.lsp.get_active_clients()
   for n, client in pairs(clients) do

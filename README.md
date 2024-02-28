@@ -4,10 +4,30 @@
 
 ### Lazy
 
-If you're using [lazy](https://github.com/folke/lazy.nvim), then add an additional call to `use`
-in your `init.lua` file.
+If you're using [lazy](https://github.com/folke/lazy.nvim), then add `slimslenderslacks/nvim-docker-ai` to your setup.  You'll
+also need `nvim-cmp`.
 
 ```lua
+-- somewhere you probably have a good lsp centric keymap defined.  Here's one that I like.
+function bufKeymap()
+  vim.api.buf_set_keyamp(bufnr, "n", "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "v", "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "gd",         "<cmd>lua vim.lsp.buf.definition()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "K",          "<cmd>lua vim.lsp.buf.hover()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "ld",         "<cmd>lua vim.lsp.buf.declaration()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "lt",         "<cmd>lua vim.lsp.buf.definition()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "ln",         "<cmd>lua vim.lsp.buf.rename()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "lf",         "<cmd>lua vim.lsp.buf.format()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "v", "lf",         "<cmd>lua vim.lsp.buf.format()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "<leader>le", "<cmd>lua vim.diagnostic.open_float()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "<leader>ll", "<cmd>lua vim.diagnostic.setlocllist()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "<leader>lj", "<cmd>lua vim.diagnostic.goto_next()<CR>", {noremap = true})     
+  vim.api.buf_set_keyamp(bufnr, "n", "<leader>lk", "<cmd>lua vim.diagnostic.goto_prev()<CR>", {noremap = true})     
+
+  -- only if you're using telescope
+  vim.api.buf_set_keyamp(bufnr, "n", "<leader>lw", "<cmd>lua require('telescope.builtin').diagnostics()<CR>", {noremap = true})     
+end
+
 require('lazy').setup(
   { 
     {
@@ -18,8 +38,9 @@ require('lazy').setup(
         'nvim-lua/plenary.nvim',
         'hrsh7th/nvim-cmp'
       },
-      config = function()
-        
+      config = function(plugin, opts)
+        require("dockerai").setup(
+          {attach = bufKeymap})
       end,
     },
     {
@@ -40,9 +61,17 @@ If you have [Ollama installed](https://ollama.ai/) installed and running, Docker
 will use it.  Docker AI will not start Ollama - if you want to use it, you'll have to start 
 it separately
 
+### Pulling the lsp container
+
+The neovim-docker-ai plugin wraps a new LSP that we are currently distributing using a Docker Image.  It will not currently be pulled automatically.
+
+```sh
+docker pull docker/lsp:staging
+```
+
 ### Using Docker AI
 
-* Docker AI ships has an LSP that will attach itself to the following buffers
+* the LSP will attach itself to the following buffers
     * dockerfile
     * dockerignore (new filetype registered by this plugin)
     * dockercompose (new filetype registered by this plugin)
@@ -59,5 +88,8 @@ it separately
 ### Building
 
 ```sh
+# docker:command=build
+
 make
 ```
+

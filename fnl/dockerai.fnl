@@ -205,6 +205,9 @@
         (let [client (lsps.get-client-by-name "docker_lsp")]
           (client.request_sync "docker/debug" {:type selected})))))
 
+(defn setup [{:attach cb}]
+  (lsps.setup cb))
+
 (vim.api.nvim_create_user_command "DockerAIStart" start {:desc "Start the LSPs for Docker AI"})
 (vim.api.nvim_create_user_command "DockerAIStop" stop {:desc "Stop the LSPs for Docker AI"})
 (vim.api.nvim_create_user_command "DockerAIDebug" lsp-debug {:desc "Get some state from the Docker LSP"})

@@ -14,7 +14,8 @@
     (. (vim.json.decode (. obj :stdout)) :Secret)))
 
 (defn use-bash [s]
-  (.. "bash --init-file <(echo '" s "')"))
+  ;;(.. "bash --init-file <(echo '" s "')")
+  s)
 
 (defn run-in-terminal [s]
   (let [current-win (nvim.tabpage_get_win 0)
@@ -56,6 +57,7 @@
     (vim.api.nvim_set_keymap :n (.. "<leader>" (vim.fn.input "Please enter a binding: ")) (.. ":lua require('lsps').runInTerminal( '" id "' )<CR>") {})))
 
 (defn terminal-registration-handler [err result ctx config]
+  (core.println "terminal-registration-handler " result)
   (set commands {})
   (->> (. result :blocks)
        (core.map (fn [m] 
@@ -121,6 +123,12 @@
 
 (def docker-lsp-filetypes ["dockerfile" "dockerignore" "dockercompose" "markdown" "datalog-edn" "shellscript"])
 
+(var attach-callback nil)
+
+(defn setup [cb]
+  "setup the lsp attach callback"
+  (set attach-callback cb))
+
 ;; vim.lsp.start attaches the current buffer
 (defn start [root-dir extra-handlers]
   (vim.lsp.start {:name "docker_lsp"
@@ -128,7 +136,7 @@
                          (docker-lsp-nix-runner root-dir)
                          (docker-lsp-docker-runner root-dir))
                   :root_dir root-dir
-                  :on_attach keymaps.default-attach-callback
+                  :on_attach (or attach-callback keymaps.default-attach-callback)
                   :settings 
                   {:docker
                    {:assistant
@@ -152,6 +160,8 @@
                                "$/exit" exit-handler}
                               extra-handlers)}))
 
+;; TODO not using this right now - important only if we're lazily starting the lsp with
+;; open buffers
 (defn attach-current-buffers []
   (let [bufs (vim.api.nvim_list_bufs)]
     (->> (core.vals bufs)

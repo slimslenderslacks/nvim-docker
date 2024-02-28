@@ -24,7 +24,7 @@ local function jwt()
 end
 _2amodule_2a["jwt"] = jwt
 local function use_bash(s)
-  return ("bash --init-file <(echo '" .. s .. "')")
+  return s
 end
 _2amodule_2a["use-bash"] = use_bash
 local function run_in_terminal(s)
@@ -74,6 +74,7 @@ local function terminal_bind_handler(err, result, ctx, config)
 end
 _2amodule_2a["terminal-bind-handler"] = terminal_bind_handler
 local function terminal_registration_handler(err, result, ctx, config)
+  core.println("terminal-registration-handler ", result)
   commands = {}
   local function _5_(m)
     commands = core.assoc(commands, m.command, m.script)
@@ -123,6 +124,12 @@ end
 _2amodule_2a["docker-lsp-docker-runner"] = docker_lsp_docker_runner
 local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose", "markdown", "datalog-edn", "shellscript"}
 _2amodule_2a["docker-lsp-filetypes"] = docker_lsp_filetypes
+local attach_callback = nil
+local function setup(cb)
+  attach_callback = cb
+  return nil
+end
+_2amodule_2a["setup"] = setup
 local function start(root_dir, extra_handlers)
   local _10_
   if ("nix" == os.getenv("DOCKER_LSP")) then
@@ -130,7 +137,7 @@ local function start(root_dir, extra_handlers)
   else
     _10_ = docker_lsp_docker_runner(root_dir)
   end
-  return vim.lsp.start({name = "docker_lsp", cmd = _10_, root_dir = root_dir, on_attach = keymaps["default-attach-callback"], settings = {docker = {assistant = {debug = true}}}, handlers = core.merge(handlers, extra_handlers)})
+  return vim.lsp.start({name = "docker_lsp", cmd = _10_, root_dir = root_dir, on_attach = (attach_callback or keymaps["default-attach-callback"]), settings = {docker = {assistant = {debug = true}}}, handlers = core.merge(handlers, extra_handlers)})
 end
 _2amodule_2a["start"] = start
 local function start_dockerai_lsp(root_dir, extra_handlers, prompt_handler, exit_handler)
