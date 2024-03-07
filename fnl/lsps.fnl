@@ -11,7 +11,9 @@
             ["docker-credential-desktop" "get"] 
             {:text true :stdin "https://index.docker.io/v1//access-token"})
         obj (p:wait)]
-    (. (vim.json.decode (. obj :stdout)) :Secret)))
+    (if (= (. obj :code) 0)
+      (. (vim.json.decode (. obj :stdout)) :Secret)
+      {:code 400 :message "no docker-credential-desktop in PATH or " :data {:code (. obj :code)}})))
 
 (defn use-bash [s]
   ;;(.. "bash --init-file <(echo '" s "')")
@@ -69,9 +71,10 @@
 ; docker ai lsp docker/jwt request handler (both lsps)
 (defn jwt-handler [err result ctx config]
   "handler for lsps that need a jwt"
-  (if err
-    (core.println "jwt err: " err))
-  (jwt))
+  (let [(ok? val-or-msg) (pcall jwt)]
+    (if ok? 
+      val-or-msg
+      {:code -32603 :message val-or-msg})))
 
 (def capabilities (cmplsp.default_capabilities))
 
@@ -106,9 +109,12 @@
 (defn docker-lsp-nix-runner [root-dir]
   ["nix"
    "run"
+   "--quiet"
+   "--log-format"
+   "raw"
    "/Users/slim/docker/lsp/#clj"
    "--"
-   "--pod-exe-path" "/Users/slim/.docker/cli-plugins/docker-pod"])
+   "--pod-exe-path" "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"])
 
 (defn docker-lsp-docker-runner [root-dir]
   ["docker" "run"

@@ -174,7 +174,7 @@ local function lsp_debug(_)
     local client = lsps["get-client-by-name"]("docker_lsp")
     return client.request_sync("docker/debug", {type = selected})
   end
-  return vim.ui.select({"documents", "project-context", "tracking-data", "login", "alpine-packages", "repositories", "client-settings"}, {prompt = "Select a prompt:", format = _21_}, _22_)
+  return vim.ui.select({"documents", "project-context", "tracking-data", "login", "alpine-packages", "repositories", "client-settings"}, {prompt = "Choose Type of Data:", format = _21_}, _22_)
 end
 _2amodule_2a["lsp-debug"] = lsp_debug
 local function setup(_23_)
@@ -183,14 +183,6 @@ local function setup(_23_)
   return lsps.setup(cb)
 end
 _2amodule_2a["setup"] = setup
-vim.api.nvim_create_user_command("DockerAIStart", start, {desc = "Start the LSPs for Docker AI"})
-vim.api.nvim_create_user_command("DockerAIStop", stop, {desc = "Stop the LSPs for Docker AI"})
-vim.api.nvim_create_user_command("DockerAIDebug", lsp_debug, {desc = "Get some state from the Docker LSP"})
-local function _25_()
-  streaming_3f = not streaming_3f
-  return core.println("now set to ", streaming_3f)
-end
-vim.api.nvim_create_user_command("DockerAIToggleStreaming", _25_, {desc = "Toggle Streaming for Docker AI"})
 local function tail_server_info()
   local clients = vim.lsp.get_active_clients()
   for n, client in pairs(clients) do
@@ -204,18 +196,30 @@ local function tail_server_info()
   return nil
 end
 _2amodule_2a["tail_server_info"] = tail_server_info
-local function set_team_id(args)
+local function set_scout_workspace(args)
   local clients = vim.lsp.get_active_clients()
   for n, client in pairs(clients) do
     if (client.name == "docker_lsp") then
-      local result = client.request_sync("docker/team-id", args, 5000)
+      local result = client.request_sync("docker/select-scout-workspace", args, 5000)
       print(result)
     else
     end
   end
   return nil
 end
-_2amodule_2a["set_team_id"] = set_team_id
+_2amodule_2a["set_scout_workspace"] = set_scout_workspace
+local function show_scout_workspace(args)
+  local clients = vim.lsp.get_active_clients()
+  for n, client in pairs(clients) do
+    if (client.name == "docker_lsp") then
+      local result = client.request_sync("docker/show-scout-workspace", args, 5000)
+      print(result)
+    else
+    end
+  end
+  return nil
+end
+_2amodule_2a["show_scout_workspace"] = show_scout_workspace
 local function docker_server_info(args)
   local clients = vim.lsp.get_active_clients()
   for n, client in pairs(clients) do
@@ -232,8 +236,9 @@ local function docker_login(args)
   local clients = vim.lsp.get_active_clients()
   for n, client in pairs(clients) do
     if (client.name == "docker_lsp") then
-      local result = client.request_sync("docker/login", args, 5000)
-      print(result)
+      local logout_result = client.request_sync("docker/logout", args, 5000)
+      local login_result = client.request_sync("docker/login", args, 5000)
+      core.print(login_result)
     else
     end
   end
@@ -252,9 +257,10 @@ local function docker_logout(args)
   return nil
 end
 _2amodule_2a["docker_logout"] = docker_logout
-nvim.create_user_command("DockerWorkspace", set_team_id, {nargs = "?"})
 nvim.create_user_command("DockerServerInfo", docker_server_info, {nargs = "?"})
+nvim.create_user_command("DockerDebug", lsp_debug, {desc = "Get some state from the Docker LSP"})
+nvim.create_user_command("DockerShowOrg", show_scout_workspace, {nargs = "?"})
+nvim.create_user_command("DockerSetOrg", show_scout_workspace, {nargs = "?"})
 nvim.create_user_command("DockerLogin", docker_login, {nargs = "?"})
-nvim.create_user_command("DockerLogout", docker_logout, {nargs = "?"})
-nvim.create_user_command("DockerTailServerInfo", tail_server_info, {nargs = "?"})
+--[[ (vim.api.nvim_create_user_command "DockerAIStart" start {:desc "Start the LSPs for Docker AI"}) (vim.api.nvim_create_user_command "DockerAIStop" stop {:desc "Stop the LSPs for Docker AI"}) (vim.api.nvim_create_user_command "DockerAIToggleStreaming" (fn [] (set streaming? (not streaming?)) (core.println "now set to " streaming?)) {:desc "Toggle Streaming for Docker AI"}) (nvim.create_user_command "DockerLogout" docker_logout {:nargs "?"}) (nvim.create_user_command "DockerTailServerInfo" tail_server_info {:nargs "?"}) ]]
 return _2amodule_2a

@@ -76,7 +76,7 @@ docker pull docker/lsp:staging
     * dockerignore (new filetype registered by this plugin)
     * dockercompose (new filetype registered by this plugin)
     * dockerbake (new filetype registered by this plugin)
-    * markdown
+    * markdown (parse markdown files for information about Docker is used in this project)
 * you may have several LSPs registered for the markdown filetype. Docker AI 
   adds Docker runbook features to the markdown filetype
 * Highlight some text in one of your buffers, and then use the keybinding `<leader>ai`(not currently
@@ -84,6 +84,14 @@ docker pull docker/lsp:staging
   A question will show up in the command prompt.  Type a question pertaining to the
   code you've selected.  A floating window will contain the output streamed from 
   Ollama.
+
+### Commands
+
+* **:DockerServerInfo** - show information about the Docker LSP (if one is attached to any open buffers in this project)
+* **:DockerDebug** - download internal representations of project context for debug
+* **:DockerShowOrg** - show the id of the Scout Org (if selected)
+* **:DockerSetOrg** - select a different Scout org (must be logged in)
+* **:DockerLogin** - reset the logged in state of the LSP.  Use this if Docker Desktop login state has changed since opening project.
 
 ### Building
 
