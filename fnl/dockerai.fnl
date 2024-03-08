@@ -243,7 +243,7 @@
       (if (= client.name "docker_lsp")
         (let [logout-result (client.request_sync "docker/logout" args 5000)
               login-result (client.request_sync "docker/login" args 5000)]
-          (core.print login-result))))))
+          (core.println login-result))))))
 
 (defn docker_logout [args]
   (let [clients (vim.lsp.get_active_clients)]

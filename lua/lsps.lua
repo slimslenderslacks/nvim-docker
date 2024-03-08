@@ -117,7 +117,7 @@ local function list()
   return core.map(_10_, vim.lsp.get_active_clients())
 end
 _2amodule_2a["list"] = list
-local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, virtual_text = false, update_in_insert = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
+local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, update_in_insert = false, virtual_text = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
 _2amodule_2a["handlers"] = handlers
 local function docker_lsp_nix_runner(root_dir)
   return {"nix", "run", "--quiet", "--log-format", "raw", "/Users/slim/docker/lsp/#clj", "--", "--pod-exe-path", "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"}

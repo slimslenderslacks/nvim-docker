@@ -238,7 +238,7 @@ local function docker_login(args)
     if (client.name == "docker_lsp") then
       local logout_result = client.request_sync("docker/logout", args, 5000)
       local login_result = client.request_sync("docker/login", args, 5000)
-      core.print(login_result)
+      core.println(login_result)
     else
     end
   end
