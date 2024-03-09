@@ -18,7 +18,6 @@ _2amodule_locals_2a["string"] = string
 _2amodule_locals_2a["util"] = util
 _2amodule_locals_2a["lsps"] = lsps
 _2amodule_locals_2a["notebook"] = notebook
-vim.lsp.set_log_level("TRACE")
 local function decode_payload(s)
   return vim.json.decode(vim.base64.decode(((vim.split(s, ".", {plain = true}))[2] .. "=")))
 end

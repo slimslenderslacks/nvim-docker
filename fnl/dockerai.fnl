@@ -6,9 +6,6 @@
    require {notebook notebook
             lsps lsps}})
 
-;; TODO not a good default
-(vim.lsp.set_log_level "TRACE")
-
 (defn decode-payload [s]
   (vim.json.decode
     (vim.base64.decode (.. (. (vim.split s "." {:plain true}) 2) "="))))
