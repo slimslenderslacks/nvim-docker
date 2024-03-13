@@ -124,7 +124,7 @@ local function docker_lsp_nix_runner(root_dir)
 end
 _2amodule_2a["docker-lsp-nix-runner"] = docker_lsp_nix_runner
 local function docker_lsp_docker_runner(root_dir)
-  return {"docker", "run", "--rm", "--init", "--interactive", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "docker/lsp:staging", "listen", "--pod-exe-path", "/app/result/bin/babashka-pod-docker", "--workspace", "/docker", "--root-dir", root_dir}
+  return {"docker", "run", "--rm", "--init", "--interactive", "--pull", "always", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "docker/lsp:staging", "listen", "--workspace", "/docker", "--root-dir", root_dir}
 end
 _2amodule_2a["docker-lsp-docker-runner"] = docker_lsp_docker_runner
 local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose", "markdown", "datalog-edn", "shellscript"}

@@ -119,12 +119,12 @@
 (defn docker-lsp-docker-runner [root-dir]
   ["docker" "run"
    "--rm" "--init" "--interactive"
+   "--pull" "always"
    "-v" "/var/run/docker.sock:/var/run/docker.sock"
    "--mount" "type=volume,source=docker-lsp,target=/docker"
    "--mount" (.. "type=bind,source=" root-dir ",target=/project")
    "docker/lsp:staging"
    "listen"
-   "--pod-exe-path" "/app/result/bin/babashka-pod-docker"
    "--workspace" "/docker"
    "--root-dir" root-dir])
 
