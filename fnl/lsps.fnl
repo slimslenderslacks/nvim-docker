@@ -119,6 +119,7 @@
 (defn docker-lsp-docker-runner [root-dir]
   ["docker" "run"
    "--rm" "--init" "--interactive"
+   "-v" "/var/run/docker.sock:/var/run/docker.sock"
    "--mount" "type=volume,source=docker-lsp,target=/docker"
    "--mount" (.. "type=bind,source=" root-dir ",target=/project")
    "docker/lsp:staging"
