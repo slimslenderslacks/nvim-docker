@@ -59,7 +59,6 @@
     (vim.api.nvim_set_keymap :n (.. "<leader>" (vim.fn.input "Please enter a binding: ")) (.. ":lua require('lsps').runInTerminal( '" id "' )<CR>") {})))
 
 (defn terminal-registration-handler [err result ctx config]
-  (core.println "terminal-registration-handler " result)
   (set commands {})
   (->> (. result :blocks)
        (core.map (fn [m] 
@@ -146,6 +145,8 @@
                   :on_attach (or attach-callback keymaps.default-attach-callback)
                   :settings 
                   {:docker
+                   {:scout
+                    {:language-gateway "https://api.scout-stage.docker.com/v1/language-gateway"}}
                    {:assistant
                     {:debug true}}}
                   :handlers (core.merge
