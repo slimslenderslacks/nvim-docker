@@ -145,10 +145,10 @@
                   :on_attach (or attach-callback keymaps.default-attach-callback)
                   :settings 
                   {:docker
-                   {:scout
-                    {:language-gateway "https://api.scout-stage.docker.com/v1/language-gateway"}}
-                   {:assistant
-                    {:debug true}}}
+                   {:assistant 
+                    {:debug true}
+                    :scout
+                    {:language-gateway "https://api.scout-stage.docker.com/v1/language-gateway"}}}
                   :handlers (core.merge
                               handlers
                               extra-handlers)}))
