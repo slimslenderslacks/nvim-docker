@@ -1,9 +1,10 @@
 (module lsps
   {autoload {cmplsp cmp_nvim_lsp
              core aniseed.core
+             fs aniseed.fs
              nvim aniseed.nvim
              keymaps keymaps
-             sha2 sha2 }})
+             sha2 sha2}})
 
 ;; jwt handler
 (defn jwt []
@@ -51,12 +52,21 @@
   (core.println "terminal-run" result)
   (run-in-terminal (. result :content)))
 
+(defn cli-helper-handler [err result ctx config]
+  "handler for lsps that request some content"
+  (core.println "cli-helper" ctx config)
+  {:pid 0})
+
 (defn terminal-bind-handler [err result ctx config]
   "handler for lsps that request some content"
   (if err
     (core.println "terminal-bind err: " err))
   (let [id (register-content (. result :content))]
     (vim.api.nvim_set_keymap :n (.. "<leader>" (vim.fn.input "Please enter a binding: ")) (.. ":lua require('lsps').runInTerminal( '" id "' )<CR>") {})))
+
+(defn inlay-hint-refresh-handler [err result ctx config]
+  (core.println "inlay-hint-refresh-handler" ctx)
+  (vim.lsp.inlay_hint.on_refresh err result ctx config))
 
 (defn terminal-registration-handler [err result ctx config]
   (set commands {})
@@ -82,7 +92,7 @@
     (fn [client] (when (= client.name s) client)) (vim.lsp.get_clients)))
 
 (defn list []
-  (core.map (fn [client] (. client :name)) (vim.lsp.get_active_clients)))
+  (core.map (fn [client] (. client :name)) (vim.lsp.get_clients)))
 
 (def handlers
   {"textDocument/publishDiagnostics"
@@ -117,6 +127,7 @@
 
 (defn docker-lsp-docker-runner [root-dir]
   ["docker" "run"
+   "--name" (core.str "nvim" (core.rand))
    "--rm" "--init" "--interactive"
    "--pull" "always"
    "-v" "/var/run/docker.sock:/var/run/docker.sock"
@@ -127,7 +138,7 @@
    "--workspace" "/docker"
    "--root-dir" root-dir])
 
-(def docker-lsp-filetypes ["dockerfile" "dockerignore" "dockercompose" "markdown" "datalog-edn" "shellscript"])
+(def docker-lsp-filetypes ["dockerfile" "dockerignore" "dockercompose.yaml" "markdown" "datalog-edn" "shellscript"])
 
 (var attach-callback nil)
 
@@ -165,7 +176,8 @@
                   :root_dir root-dir
                   :handlers (core.merge
                               {"$/prompt" prompt-handler
-                               "$/exit" exit-handler}
+                               "$/exit" exit-handler
+                               "workspace/inlayHint/refresh" inlay-hint-refresh-handler}
                               extra-handlers)}))
 
 ;; TODO not using this right now - important only if we're lazily starting the lsp with
@@ -200,7 +212,9 @@
                           {"docker/jwt" jwt-handler
                            "$terminal/run" terminal-run-handler
                            "$bind/run" terminal-bind-handler
-                           "$bind/register" terminal-registration-handler}))
+                           "$bind/register" terminal-registration-handler
+                           "docker/cli-helper" cli-helper-handler
+                           "workspace/inlayHint/refresh" inlay-hint-refresh-handler}))
                       ;; don't delete the autocmd
                       false))})
 

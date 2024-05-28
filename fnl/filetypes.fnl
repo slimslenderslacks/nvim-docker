@@ -2,9 +2,10 @@
 
 (defn init []
   (vim.filetype.add
-    {:filename
-     {"compose.yaml" "dockercompose"
-      ".dockerignore" "dockerignore"}})
+    {:pattern 
+     {".*compose.y.?ml" "dockercompose.yaml"}
+     :filename
+     {".dockerignore" "dockerignore"}})
   (vim.filetype.add
     {:extension 
      {:shellscript "shellscript"}})

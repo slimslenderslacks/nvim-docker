@@ -11,9 +11,10 @@ do
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
 local autoload = (require("aniseed.autoload")).autoload
-local cmplsp, core, keymaps, nvim, sha2 = autoload("cmp_nvim_lsp"), autoload("aniseed.core"), autoload("keymaps"), autoload("aniseed.nvim"), autoload("sha2")
+local cmplsp, core, fs, keymaps, nvim, sha2 = autoload("cmp_nvim_lsp"), autoload("aniseed.core"), autoload("aniseed.fs"), autoload("keymaps"), autoload("aniseed.nvim"), autoload("sha2")
 do end (_2amodule_locals_2a)["cmplsp"] = cmplsp
 _2amodule_locals_2a["core"] = core
+_2amodule_locals_2a["fs"] = fs
 _2amodule_locals_2a["keymaps"] = keymaps
 _2amodule_locals_2a["nvim"] = nvim
 _2amodule_locals_2a["sha2"] = sha2
@@ -68,6 +69,11 @@ local function terminal_run_handler(err, result, ctx, config)
   return run_in_terminal(result.content)
 end
 _2amodule_2a["terminal-run-handler"] = terminal_run_handler
+local function cli_helper_handler(err, result, ctx, config)
+  core.println("cli-helper", ctx, config)
+  return {pid = 0}
+end
+_2amodule_2a["cli-helper-handler"] = cli_helper_handler
 local function terminal_bind_handler(err, result, ctx, config)
   if err then
     core.println("terminal-bind err: ", err)
@@ -77,6 +83,11 @@ local function terminal_bind_handler(err, result, ctx, config)
   return vim.api.nvim_set_keymap("n", ("<leader>" .. vim.fn.input("Please enter a binding: ")), (":lua require('lsps').runInTerminal( '" .. id .. "' )<CR>"), {})
 end
 _2amodule_2a["terminal-bind-handler"] = terminal_bind_handler
+local function inlay_hint_refresh_handler(err, result, ctx, config)
+  core.println("inlay-hint-refresh-handler", ctx)
+  return vim.lsp.inlay_hint.on_refresh(err, result, ctx, config)
+end
+_2amodule_2a["inlay-hint-refresh-handler"] = inlay_hint_refresh_handler
 local function terminal_registration_handler(err, result, ctx, config)
   commands = {}
   local function _6_(m)
@@ -113,20 +124,20 @@ local function list()
   local function _10_(client)
     return client.name
   end
-  return core.map(_10_, vim.lsp.get_active_clients())
+  return core.map(_10_, vim.lsp.get_clients())
 end
 _2amodule_2a["list"] = list
-local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, update_in_insert = false, virtual_text = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
+local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, virtual_text = false, update_in_insert = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
 _2amodule_2a["handlers"] = handlers
 local function docker_lsp_nix_runner(root_dir)
   return {"nix", "run", "--quiet", "--log-format", "raw", "/Users/slim/docker/lsp/#clj", "--", "--pod-exe-path", "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"}
 end
 _2amodule_2a["docker-lsp-nix-runner"] = docker_lsp_nix_runner
 local function docker_lsp_docker_runner(root_dir)
-  return {"docker", "run", "--rm", "--init", "--interactive", "--pull", "always", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "docker/lsp:staging", "listen", "--workspace", "/docker", "--root-dir", root_dir}
+  return {"docker", "run", "--name", core.str("nvim", core.rand()), "--rm", "--init", "--interactive", "--pull", "always", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "docker/lsp:staging", "listen", "--workspace", "/docker", "--root-dir", root_dir}
 end
 _2amodule_2a["docker-lsp-docker-runner"] = docker_lsp_docker_runner
-local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose", "markdown", "datalog-edn", "shellscript"}
+local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose.yaml", "markdown", "datalog-edn", "shellscript"}
 _2amodule_2a["docker-lsp-filetypes"] = docker_lsp_filetypes
 local attach_callback = nil
 local function setup(cb)
@@ -145,7 +156,7 @@ local function start(root_dir, extra_handlers)
 end
 _2amodule_2a["start"] = start
 local function start_dockerai_lsp(root_dir, extra_handlers, prompt_handler, exit_handler)
-  return vim.lsp.start({name = "docker_ai", cmd = {"docker", "run", "--rm", "--init", "--interactive", "docker/labs-assistant-ml:staging"}, root_dir = root_dir, handlers = core.merge({["$/prompt"] = prompt_handler, ["$/exit"] = exit_handler}, extra_handlers)})
+  return vim.lsp.start({name = "docker_ai", cmd = {"docker", "run", "--rm", "--init", "--interactive", "docker/labs-assistant-ml:staging"}, root_dir = root_dir, handlers = core.merge({["$/prompt"] = prompt_handler, ["$/exit"] = exit_handler, ["workspace/inlayHint/refresh"] = inlay_hint_refresh_handler}, extra_handlers)})
 end
 _2amodule_2a["start-dockerai-lsp"] = start_dockerai_lsp
 local function attach_current_buffers()
@@ -163,7 +174,7 @@ local function _14_()
   if client then
     vim.lsp.buf_attach_client(0, client.id)
   else
-    start(vim.fn.getcwd(), {["docker/jwt"] = jwt_handler, ["$terminal/run"] = terminal_run_handler, ["$bind/run"] = terminal_bind_handler, ["$bind/register"] = terminal_registration_handler})
+    start(vim.fn.getcwd(), {["docker/jwt"] = jwt_handler, ["$terminal/run"] = terminal_run_handler, ["$bind/run"] = terminal_bind_handler, ["$bind/register"] = terminal_registration_handler, ["docker/cli-helper"] = cli_helper_handler, ["workspace/inlayHint/refresh"] = inlay_hint_refresh_handler})
   end
   return false
 end

@@ -11,9 +11,11 @@ do
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
 local autoload = (require("aniseed.autoload")).autoload
-local nvim = autoload("aniseed.nvim")
-do end (_2amodule_locals_2a)["nvim"] = nvim
+local core, nvim = autoload("aniseed.core"), autoload("aniseed.nvim")
+do end (_2amodule_locals_2a)["core"] = core
+_2amodule_locals_2a["nvim"] = nvim
 local function default_attach_callback(client, bufnr)
+  vim.lsp.inlay_hint.enable(true, {bufnr = bufnr})
   nvim.buf_set_keymap(bufnr, "n", "gd", "<Cmd>lua vim.lsp.buf.definition()<CR>", {noremap = true})
   nvim.buf_set_keymap(bufnr, "n", "K", "<Cmd>lua vim.lsp.buf.hover()<CR>", {noremap = true})
   nvim.buf_set_keymap(bufnr, "n", "<leader>ld", "<Cmd>lua vim.lsp.buf.declaration()<CR>", {noremap = true})

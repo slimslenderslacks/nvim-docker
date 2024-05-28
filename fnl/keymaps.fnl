@@ -1,7 +1,10 @@
 (module keymaps
-  {autoload {nvim aniseed.nvim}})
+  {autoload {nvim aniseed.nvim
+             core aniseed.core}})
 
 (defn default-attach-callback [client bufnr]
+  (vim.lsp.inlay_hint.enable true {:bufnr bufnr})    
+
   (nvim.buf_set_keymap bufnr :n :gd           "<Cmd>lua vim.lsp.buf.definition()<CR>" {:noremap true})
   (nvim.buf_set_keymap bufnr :n :K            "<Cmd>lua vim.lsp.buf.hover()<CR>" {:noremap true})
   (nvim.buf_set_keymap bufnr :n :<leader>ld   "<Cmd>lua vim.lsp.buf.declaration()<CR>" {:noremap true})
