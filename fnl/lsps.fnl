@@ -6,6 +6,10 @@
              keymaps keymaps
              sha2 sha2}})
 
+(defn get-client-by-name [s] 
+  (core.some 
+    (fn [client] (when (= client.name s) client)) (vim.lsp.get_clients)))
+
 ;; jwt handler
 (defn jwt []
   (let [p (vim.system 
@@ -52,10 +56,32 @@
   (core.println "terminal-run" result)
   (run-in-terminal (. result :content)))
 
+(defn notify [channel data]
+  (case (get-client-by-name "docker_lsp")
+    lsp (lsp.notify channel data)
+    _ (core.println channel data)))
+
 (defn cli-helper-handler [err result ctx config]
   "handler for lsps that request some content"
-  (core.println "cli-helper" ctx config)
-  {:pid 0})
+  ;; for request handlers, the result is the params
+  ;; the ctx has the client_id and the method
+  ;; the config is probably empty
+  (let [p (vim.system 
+            (core.concat [(. result :executable)] (. result :args))
+            {:text true 
+             :stdin false 
+             :stdout (fn [err data]
+                       (notify "$/docker/cli-helper" {:stdout data :id (. result :id)}))
+             :stderr (fn [err data]
+                       (notify "$/docker/cli-helper" {:stderr data :id (. result :id)}))}
+            (fn [{:code code :signal signal &as data}]
+              (notify "$/docker/cli-helper" (-> {} 
+                                                (core.merge (if code {:exit code}))
+                                                (core.merge (if signal {:signal signal}))
+                                                (core.assoc :id (. result :id))))))]
+    {:pid (. p :pid)}))
+
+;(cli-helper-handler nil {:executable "docker" :args ["ps"]} nil nil)
 
 (defn terminal-bind-handler [err result ctx config]
   "handler for lsps that request some content"
@@ -86,10 +112,6 @@
       {:code -32603 :message val-or-msg})))
 
 (def capabilities (cmplsp.default_capabilities))
-
-(defn get-client-by-name [s] 
-  (core.some 
-    (fn [client] (when (= client.name s) client)) (vim.lsp.get_clients)))
 
 (defn list []
   (core.map (fn [client] (. client :name)) (vim.lsp.get_clients)))
