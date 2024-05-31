@@ -5,8 +5,7 @@
              util slim.nvim
              curl plenary.curl
              lsps lsps}
-   require {dockerai dockerai
-            job plenary.job}})
+   require {job plenary.job}})
 
 (defn open [lines]
   (let [buf (vim.api.nvim_create_buf false true)]
@@ -36,18 +35,6 @@
 (defn execute-prompt [prompt]
   (util.stream-into-buffer (partial ollama "") prompt))
 
-(defn execute-rag-prompt [prompt]
-  (util.stream-into-buffer
-    (fn [prompt cb]
-      (let [j (job:new 
-                {:command "/Users/slim/slimslenderslacks/hackathon/bin/python3"
-                 :args ["rag.py" prompt]
-                 :on_stdout (fn [_ line] (cb line))
-                 :on_stderr (fn [_ line] (cb line))
-                 :on_exit (fn [])})]
-        (job.start j)))
-    prompt))
-
 (comment
   (execute-prompt "What does a Dockerfile look like?")
   (vim.fn.input "Question: "))
@@ -70,7 +57,7 @@
           (if 
             (= selected "run base LLM")
             (execute-prompt prompt) 
-            (execute-rag-prompt prompt)))))))
+            (execute-prompt prompt)))))))
 
 (nvim.set_keymap :v :<leader>ai ":lua require('nano-copilot').copilot()<CR>" {})
 
@@ -80,22 +67,5 @@
 ;; ----------------
 
 (comment
-  (lsps.list)
-  (dockerai.into-buffer "Summarize this project")
-  (dockerai.into-buffer "Write a compose file with php and mysql server"))
-
-;; Now integrate Docker AI
-(defn dockerCopilot []
-  (let [prompts (dockerai.questions)]
-    (vim.ui.select
-      prompts
-      {:prompt "Select a prompt:"
-       :format (fn [item] (item:gsub "_" " "))}
-      (fn [selected _]
-        (if (= selected "Custom Question")
-          (let [q (vim.fn.input "Custom Question: ")]
-            (dockerai.into-buffer q))
-          (dockerai.into-buffer selected))))))
-
-(nvim.set_keymap :n :<leader>ai ":lua require('nano-copilot').dockerCopilot()<CR>" {})
+  (lsps.list))
 

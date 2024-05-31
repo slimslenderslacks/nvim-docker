@@ -186,22 +186,6 @@
                               handlers
                               extra-handlers)}))
 
-(defn start-dockerai-lsp 
-  [root-dir 
-   extra-handlers
-   prompt-handler
-   exit-handler]
-  (vim.lsp.start {:name "docker_ai"
-                  :cmd ["docker" "run"
-                        "--rm" "--init" "--interactive"
-                        "docker/labs-assistant-ml:staging"]
-                  :root_dir root-dir
-                  :handlers (core.merge
-                              {"$/prompt" prompt-handler
-                               "$/exit" exit-handler
-                               "workspace/inlayHint/refresh" inlay-hint-refresh-handler}
-                              extra-handlers)}))
-
 ;; TODO not using this right now - important only if we're lazily starting the lsp with
 ;; open buffers
 (defn attach-current-buffers []

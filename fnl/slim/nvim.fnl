@@ -4,6 +4,17 @@
              str aniseed.string
              lspconfig-util lspconfig.util}})
 
+(defn decode-payload [s]
+  (vim.json.decode
+    (vim.base64.decode (.. (. (vim.split s "." {:plain true}) 2) "="))))
+
+(defn update-buf [buf lines]
+  (vim.api.nvim_buf_call
+    buf
+    (fn [] 
+      (vim.cmd "norm! G")
+      (vim.api.nvim_put lines "" true true))))
+
 (defn git-root []
   (or
     ((lspconfig-util.root_pattern ".git") (vim.fn.getcwd))

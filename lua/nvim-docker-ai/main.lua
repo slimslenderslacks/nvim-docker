@@ -10,9 +10,9 @@ do
   _2amodule_2a["aniseed/locals"] = {}
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
-local core, dockerai, filetypes, lsps, nano_copilot = require("nvim-docker-ai.aniseed.core"), require("dockerai"), require("filetypes"), require("lsps"), require("nano-copilot")
-do end (_2amodule_locals_2a)["core"] = core
-_2amodule_locals_2a["dockerai"] = dockerai
+local commands, core, filetypes, lsps, nano_copilot = require("commands"), require("nvim-docker-ai.aniseed.core"), require("filetypes"), require("lsps"), require("nano-copilot")
+do end (_2amodule_locals_2a)["commands"] = commands
+_2amodule_locals_2a["core"] = core
 _2amodule_locals_2a["filetypes"] = filetypes
 _2amodule_locals_2a["lsps"] = lsps
 _2amodule_locals_2a["nano-copilot"] = nano_copilot

@@ -1,5 +1,5 @@
 (module nvim-docker-ai.main
-  {require {dockerai dockerai
+  {require {commands commands
             filetypes filetypes
             nano-copilot nano-copilot
             core aniseed.core

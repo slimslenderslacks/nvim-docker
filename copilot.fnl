@@ -3,8 +3,7 @@
             nvim aniseed.nvim
             str aniseed.string
             util slim.nvim
-            curl plenary.curl
-            dockerai dockerai}})
+            curl plenary.curl}})
 
 (defn open [lines]
   (let [buf (vim.api.nvim_create_buf false true)]
@@ -54,24 +53,3 @@
 
 ;; ------------
 
-(comment
-  (util.lsps-list)
-  (dockerai.start)
-  (dockerai.stop)
-  (dockerai.into-buffer "Summarize this project"))
-
-(defn dockerCopilot []
-  (let [prompts (dockerai.questions)]
-    (vim.ui.select
-      prompts
-      {:prompt "Select a prompt from Docker AI:"}
-      (fn [selected _]
-        (if (= selected "Custom Question")
-          (dockerai.into-buffer (vim.fn.input "Custom Question: "))
-          (dockerai.into-buffer selected))))))
-
-(nvim.set_keymap :n :<leader>ai ":lua require('copilot').dockerCopilot()<CR>" {})
-
-(comment
-  (dockerai.bottom-terminal "docker init")
-  (dockerai.bottom-terminal "docker scout quickview"))

@@ -16,21 +16,33 @@ do end (_2amodule_locals_2a)["core"] = core
 _2amodule_locals_2a["lspconfig-util"] = lspconfig_util
 _2amodule_locals_2a["nvim"] = nvim
 _2amodule_locals_2a["str"] = str
+local function decode_payload(s)
+  return vim.json.decode(vim.base64.decode(((vim.split(s, ".", {plain = true}))[2] .. "=")))
+end
+_2amodule_2a["decode-payload"] = decode_payload
+local function update_buf(buf, lines)
+  local function _1_()
+    vim.cmd("norm! G")
+    return vim.api.nvim_put(lines, "", true, true)
+  end
+  return vim.api.nvim_buf_call(buf, _1_)
+end
+_2amodule_2a["update-buf"] = update_buf
 local function git_root()
   return (lspconfig_util.root_pattern(".git")(vim.fn.getcwd()) or vim.fn.getcwd())
 end
 _2amodule_2a["git-root"] = git_root
 local function get_current_buffer_selection()
-  local _let_1_ = nvim.fn.getpos("'<")
-  local _ = _let_1_[1]
-  local s1 = _let_1_[2]
-  local e1 = _let_1_[3]
-  local _0 = _let_1_[4]
-  local _let_2_ = nvim.fn.getpos("'>")
-  local _1 = _let_2_[1]
-  local s2 = _let_2_[2]
-  local e2 = _let_2_[3]
-  local _2 = _let_2_[4]
+  local _let_2_ = nvim.fn.getpos("'<")
+  local _ = _let_2_[1]
+  local s1 = _let_2_[2]
+  local e1 = _let_2_[3]
+  local _0 = _let_2_[4]
+  local _let_3_ = nvim.fn.getpos("'>")
+  local _1 = _let_3_[1]
+  local s2 = _let_3_[2]
+  local e2 = _let_3_[3]
+  local _2 = _let_3_[4]
   return nvim.buf_get_text(nvim.buf.nr(), (s1 - 1), (e1 - 1), (s2 - 1), (e2 - 1), {})
 end
 _2amodule_2a["get-current-buffer-selection"] = get_current_buffer_selection
@@ -50,13 +62,13 @@ local function show_spinner(buf, n)
   local characters = {"\226\160\139", "\226\160\153", "\226\160\185", "\226\160\184", "\226\160\188", "\226\160\180", "\226\160\166", "\226\160\167", "\226\160\135", "\226\160\143"}
   local format = "> Generating %s"
   local t = vim.loop.new_timer()
-  local function _3_()
+  local function _4_()
     local lines = {format:format(core.get(characters, current_char))}
     nvim.buf_set_lines(buf, n, (n + 1), false, lines)
     current_char = ((current_char % core.count(characters)) + 1)
     return nil
   end
-  t:start(100, 100, vim.schedule_wrap(_3_))
+  t:start(100, 100, vim.schedule_wrap(_4_))
   return t
 end
 _2amodule_2a["show-spinner"] = show_spinner
@@ -75,20 +87,20 @@ _2amodule_2a["open"] = open
 local function stream_into_buffer(stream_generator, prompt)
   local tokens = {}
   local lines = str.split(prompt, "\n")
-  local _let_4_ = open(lines)
-  local win = _let_4_[1]
-  local buf = _let_4_[2]
+  local _let_5_ = open(lines)
+  local win = _let_5_[1]
+  local buf = _let_5_[2]
   local t = show_spinner(buf, core.inc(core.count(lines)))
   nvim.buf_set_lines(buf, -1, -1, false, {"", ""})
-  local function _5_(s)
-    local function _6_()
+  local function _6_(s)
+    local function _7_()
       t:stop()
       tokens = core.concat(tokens, {s})
       return vim.api.nvim_buf_set_lines(buf, core.inc(core.count(lines)), -1, false, str.split(str.join(tokens), "\n"))
     end
-    return vim.schedule(_6_)
+    return vim.schedule(_7_)
   end
-  return stream_generator(prompt, _5_)
+  return stream_generator(prompt, _6_)
 end
 _2amodule_2a["stream-into-buffer"] = stream_into_buffer
 local function open_file(path)
