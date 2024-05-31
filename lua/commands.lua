@@ -19,8 +19,7 @@ _2amodule_locals_2a["util"] = util
 _2amodule_locals_2a["lsps"] = lsps
 local function start_lsps()
   local root_dir = vim.fn.getcwd()
-  local extra_handlers = {["docker/jwt"] = lsps["jwt-handler"], ["$terminal/run"] = lsps["terminal-run-handler"], ["$bind/run"] = lsps["terminal-bind-handler"]}
-  return lsps.start(root_dir, extra_handlers)
+  return lsps.start(root_dir, lsps["extra-handlers"])
 end
 _2amodule_2a["start-lsps"] = start_lsps
 local function stop()
@@ -128,5 +127,7 @@ nvim.create_user_command("DockerDebug", lsp_debug, {desc = "Get some state from 
 nvim.create_user_command("DockerShowOrg", show_scout_workspace, {nargs = "?"})
 nvim.create_user_command("DockerSetOrg", show_scout_workspace, {nargs = "?"})
 nvim.create_user_command("DockerLogin", docker_login, {nargs = "?"})
---[[ (vim.api.nvim_create_user_command "DockerAIStart" start {:desc "Start the LSPs for Docker AI"}) (vim.api.nvim_create_user_command "DockerAIStop" stop {:desc "Stop the LSPs for Docker AI"}) (nvim.create_user_command "DockerLogout" docker_logout {:nargs "?"}) ]]
+nvim.create_user_command("DockerLspStart", start_lsps, {desc = "Start the LSP without starting files"})
+nvim.create_user_command("DockerLspStop", stop, {desc = "Stop the Docker LSP"})
+--[[ (nvim.create_user_command "DockerLogout" docker_logout {:nargs "?"}) ]]
 return _2amodule_2a

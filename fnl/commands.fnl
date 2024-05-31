@@ -8,15 +8,12 @@
 (defn start-lsps []
   "start both docker_ai and docker_lsp services"
   (let [root-dir ;; TODO (util.git-root)
-          (vim.fn.getcwd)
-        extra-handlers {"docker/jwt" lsps.jwt-handler
-                        "$terminal/run" lsps.terminal-run-handler
-                        "$bind/run" lsps.terminal-bind-handler}]
-    (lsps.start root-dir extra-handlers)))
+          (vim.fn.getcwd)]
+    (lsps.start root-dir lsps.extra-handlers)))
 
 (defn stop []
   (let [docker-lsp (. (lsps.get-client-by-name "docker_lsp") :id)]
-    (when docker-lsp (vim.lsp.stop_client docker-lsp  false))))
+    (when docker-lsp (vim.lsp.stop_client docker-lsp false))))
 
 (defn lsp-debug [_]
   (vim.ui.select
@@ -85,9 +82,9 @@
 (nvim.create_user_command "DockerShowOrg" show_scout_workspace {:nargs "?"})
 (nvim.create_user_command "DockerSetOrg" show_scout_workspace {:nargs "?"})
 (nvim.create_user_command "DockerLogin" docker_login {:nargs "?"})
+(nvim.create_user_command "DockerLspStart" start-lsps {:desc "Start the LSP without starting files"})
+(nvim.create_user_command "DockerLspStop" stop {:desc "Stop the Docker LSP"})
 
 (comment
-  (vim.api.nvim_create_user_command "DockerAIStart" start {:desc "Start the LSPs for Docker AI"})
-  (vim.api.nvim_create_user_command "DockerAIStop" stop {:desc "Stop the LSPs for Docker AI"})
   (nvim.create_user_command "DockerLogout" docker_logout {:nargs "?"}))
 

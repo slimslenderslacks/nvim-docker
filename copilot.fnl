@@ -48,8 +48,3 @@
 
 (nvim.set_keymap :v :<leader>ai ":lua require('copilot').copilot()<CR>" {})
 
-;; I need a function that adds strings in python
-;; My Docker Image should package a NOde app based on a package.json file
-
-;; ------------
-

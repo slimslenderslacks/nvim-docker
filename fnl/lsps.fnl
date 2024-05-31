@@ -92,10 +92,12 @@
 
 (defn inlay-hint-refresh-handler [err result ctx config]
   (core.println "inlay-hint-refresh-handler" ctx)
-  (vim.lsp.inlay_hint.on_refresh err result ctx config))
+  (let [r (vim.lsp.inlay_hint.on_refresh err result ctx config)]
+    (core.println "inlay-hint-refresh-handler complete")
+    ; TODO hack - how do we force redraw of current buffer?  edit buffer does it but ...
+    r))
 
 (defn terminal-registration-handler [err result ctx config]
-  (set commands {})
   (->> (. result :blocks)
        (core.map (fn [m] 
                    (set commands 
@@ -147,6 +149,11 @@
    "--"
    "--pod-exe-path" "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"])
 
+(defn docker-lsp-clj-runner [root-dir]
+  ["bash"
+   "-c"
+   "cd ~/docker/lsp && eval \"$(direnv export bash)\" && clojure -A:start --pod-exe-path /Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"])
+
 (defn docker-lsp-docker-runner [root-dir]
   ["docker" "run"
    "--name" (core.str "nvim" (core.rand))
@@ -155,7 +162,7 @@
    "-v" "/var/run/docker.sock:/var/run/docker.sock"
    "--mount" "type=volume,source=docker-lsp,target=/docker"
    "--mount" (.. "type=bind,source=" root-dir ",target=/project")
-   "docker/lsp:staging"
+   (core.str "docker/lsp:" (or (os.getenv "DOCKER_LSP_TAG") "latest"))
    "listen"
    "--workspace" "/docker"
    "--root-dir" root-dir])
@@ -171,8 +178,11 @@
 ;; vim.lsp.start attaches the current buffer
 (defn start [root-dir extra-handlers]
   (vim.lsp.start {:name "docker_lsp"
-                  :cmd (if (= "nix" (os.getenv "DOCKER_LSP"))
+                  :cmd (if 
+                         (= "nix" (os.getenv "DOCKER_LSP"))
                          (docker-lsp-nix-runner root-dir)
+                         (= "clj" (os.getenv "DOCKER_LSP"))
+                         (docker-lsp-clj-runner root-dir)
                          (docker-lsp-docker-runner root-dir))
                   :root_dir root-dir
                   :on_attach (or attach-callback keymaps.default-attach-callback)
@@ -203,6 +213,14 @@
 (vim.api.nvim_create_augroup
   "docker-ai" {})
 
+(def extra-handlers
+  {"docker/jwt" jwt-handler
+   "$terminal/run" terminal-run-handler
+   "$bind/run" terminal-bind-handler
+   "$bind/register" terminal-registration-handler
+   "docker/cli-helper" cli-helper-handler
+   "workspace/inlayHint/refresh" inlay-hint-refresh-handler})
+
 ;; once this module is required, the docker_lsp will 
 ;; be attached to these buffers whenever opened
 (vim.api.nvim_create_autocmd
@@ -215,12 +233,7 @@
                         (vim.lsp.buf_attach_client 0 client.id)
                         (start 
                           (vim.fn.getcwd)
-                          {"docker/jwt" jwt-handler
-                           "$terminal/run" terminal-run-handler
-                           "$bind/run" terminal-bind-handler
-                           "$bind/register" terminal-registration-handler
-                           "docker/cli-helper" cli-helper-handler
-                           "workspace/inlayHint/refresh" inlay-hint-refresh-handler}))
+                          extra-handlers))
                       ;; don't delete the autocmd
                       false))})
 

@@ -137,11 +137,12 @@ end
 _2amodule_2a["terminal-bind-handler"] = terminal_bind_handler
 local function inlay_hint_refresh_handler(err, result, ctx, config)
   core.println("inlay-hint-refresh-handler", ctx)
-  return vim.lsp.inlay_hint.on_refresh(err, result, ctx, config)
+  local r = vim.lsp.inlay_hint.on_refresh(err, result, ctx, config)
+  core.println("inlay-hint-refresh-handler complete")
+  return r
 end
 _2amodule_2a["inlay-hint-refresh-handler"] = inlay_hint_refresh_handler
 local function terminal_registration_handler(err, result, ctx, config)
-  commands = {}
   local function _17_(m)
     commands = core.assoc(commands, m.command, m.script)
     return nil
@@ -174,8 +175,12 @@ local function docker_lsp_nix_runner(root_dir)
   return {"nix", "run", "--quiet", "--log-format", "raw", "/Users/slim/docker/lsp/#clj", "--", "--pod-exe-path", "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"}
 end
 _2amodule_2a["docker-lsp-nix-runner"] = docker_lsp_nix_runner
+local function docker_lsp_clj_runner(root_dir)
+  return {"bash", "-c", "cd ~/docker/lsp && eval \"$(direnv export bash)\" && clojure -A:start --pod-exe-path /Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"}
+end
+_2amodule_2a["docker-lsp-clj-runner"] = docker_lsp_clj_runner
 local function docker_lsp_docker_runner(root_dir)
-  return {"docker", "run", "--name", core.str("nvim", core.rand()), "--rm", "--init", "--interactive", "--pull", "always", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "docker/lsp:staging", "listen", "--workspace", "/docker", "--root-dir", root_dir}
+  return {"docker", "run", "--name", core.str("nvim", core.rand()), "--rm", "--init", "--interactive", "--pull", "always", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), core.str("docker/lsp:", (os.getenv("DOCKER_LSP_TAG") or "latest")), "listen", "--workspace", "/docker", "--root-dir", root_dir}
 end
 _2amodule_2a["docker-lsp-docker-runner"] = docker_lsp_docker_runner
 local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose.yaml", "markdown", "datalog-edn", "shellscript"}
@@ -190,16 +195,14 @@ local function start(root_dir, extra_handlers)
   local _20_
   if ("nix" == os.getenv("DOCKER_LSP")) then
     _20_ = docker_lsp_nix_runner(root_dir)
+  elseif ("clj" == os.getenv("DOCKER_LSP")) then
+    _20_ = docker_lsp_clj_runner(root_dir)
   else
     _20_ = docker_lsp_docker_runner(root_dir)
   end
   return vim.lsp.start({name = "docker_lsp", cmd = _20_, root_dir = root_dir, on_attach = (attach_callback or keymaps["default-attach-callback"]), settings = {docker = {assistant = {debug = true}, scout = {["language-gateway"] = "https://api.scout-stage.docker.com/v1/language-gateway"}}}, handlers = core.merge(handlers, extra_handlers)})
 end
 _2amodule_2a["start"] = start
-local function start_dockerai_lsp(root_dir, extra_handlers, prompt_handler, exit_handler)
-  return vim.lsp.start({name = "docker_ai", cmd = {"docker", "run", "--rm", "--init", "--interactive", "docker/labs-assistant-ml:staging"}, root_dir = root_dir, handlers = core.merge({["$/prompt"] = prompt_handler, ["$/exit"] = exit_handler, ["workspace/inlayHint/refresh"] = inlay_hint_refresh_handler}, extra_handlers)})
-end
-_2amodule_2a["start-dockerai-lsp"] = start_dockerai_lsp
 local function attach_current_buffers()
   local bufs = vim.api.nvim_list_bufs()
   local function _22_(bufnr)
@@ -210,12 +213,14 @@ local function attach_current_buffers()
 end
 _2amodule_2a["attach-current-buffers"] = attach_current_buffers
 vim.api.nvim_create_augroup("docker-ai", {})
+local extra_handlers = {["docker/jwt"] = jwt_handler, ["$terminal/run"] = terminal_run_handler, ["$bind/run"] = terminal_bind_handler, ["$bind/register"] = terminal_registration_handler, ["docker/cli-helper"] = cli_helper_handler, ["workspace/inlayHint/refresh"] = inlay_hint_refresh_handler}
+_2amodule_2a["extra-handlers"] = extra_handlers
 local function _23_()
   local client = get_client_by_name("docker_lsp")
   if client then
     vim.lsp.buf_attach_client(0, client.id)
   else
-    start(vim.fn.getcwd(), {["docker/jwt"] = jwt_handler, ["$terminal/run"] = terminal_run_handler, ["$bind/run"] = terminal_bind_handler, ["$bind/register"] = terminal_registration_handler, ["docker/cli-helper"] = cli_helper_handler, ["workspace/inlayHint/refresh"] = inlay_hint_refresh_handler})
+    start(vim.fn.getcwd(), extra_handlers)
   end
   return false
 end
