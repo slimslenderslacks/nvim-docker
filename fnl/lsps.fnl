@@ -147,7 +147,8 @@
    "raw"
    "/Users/slim/docker/lsp/#clj"
    "--"
-   "--pod-exe-path" "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"])
+   "--pod-exe-path" "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"
+   "--profile" "all"])
 
 (defn docker-lsp-clj-runner [root-dir]
   ["bash"
@@ -162,10 +163,14 @@
    "-v" "/var/run/docker.sock:/var/run/docker.sock"
    "--mount" "type=volume,source=docker-lsp,target=/docker"
    "--mount" (.. "type=bind,source=" root-dir ",target=/project")
+   "--label" (core.str "com.docker.lsp.workspace_roots=" root-dir)
+   "--label" "com.docker.lsp=true"
+   "--label" "com.docker.lsp.extension=labs-make-runbook"
    (core.str "docker/lsp:" (or (os.getenv "DOCKER_LSP_TAG") "latest"))
    "listen"
    "--workspace" "/docker"
-   "--root-dir" root-dir])
+   "--root-dir" root-dir
+   "--profile" "all"])
 
 (def docker-lsp-filetypes ["dockerfile" "dockerignore" "dockercompose.yaml" "markdown" "datalog-edn" "shellscript"])
 

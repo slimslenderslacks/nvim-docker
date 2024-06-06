@@ -172,7 +172,7 @@ _2amodule_2a["list"] = list
 local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, virtual_text = false, update_in_insert = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
 _2amodule_2a["handlers"] = handlers
 local function docker_lsp_nix_runner(root_dir)
-  return {"nix", "run", "--quiet", "--log-format", "raw", "/Users/slim/docker/lsp/#clj", "--", "--pod-exe-path", "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint"}
+  return {"nix", "run", "--quiet", "--log-format", "raw", "/Users/slim/docker/lsp/#clj", "--", "--pod-exe-path", "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint", "--profile", "all"}
 end
 _2amodule_2a["docker-lsp-nix-runner"] = docker_lsp_nix_runner
 local function docker_lsp_clj_runner(root_dir)
@@ -180,7 +180,7 @@ local function docker_lsp_clj_runner(root_dir)
 end
 _2amodule_2a["docker-lsp-clj-runner"] = docker_lsp_clj_runner
 local function docker_lsp_docker_runner(root_dir)
-  return {"docker", "run", "--name", core.str("nvim", core.rand()), "--rm", "--init", "--interactive", "--pull", "always", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), core.str("docker/lsp:", (os.getenv("DOCKER_LSP_TAG") or "latest")), "listen", "--workspace", "/docker", "--root-dir", root_dir}
+  return {"docker", "run", "--name", core.str("nvim", core.rand()), "--rm", "--init", "--interactive", "--pull", "always", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "--label", core.str("com.docker.lsp.workspace_roots=", root_dir), "--label", "com.docker.lsp=true", "--label", "com.docker.lsp.extension=labs-make-runbook", core.str("docker/lsp:", (os.getenv("DOCKER_LSP_TAG") or "latest")), "listen", "--workspace", "/docker", "--root-dir", root_dir, "--profile", "all"}
 end
 _2amodule_2a["docker-lsp-docker-runner"] = docker_lsp_docker_runner
 local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose.yaml", "markdown", "datalog-edn", "shellscript"}
