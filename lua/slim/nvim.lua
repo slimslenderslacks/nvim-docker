@@ -84,25 +84,52 @@ local function open(lines)
   return {open_win(buf, {title = "Copilot"}), buf}
 end
 _2amodule_2a["open"] = open
+local function open_new_buffer(s)
+  local buf = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_win_set_buf(0, buf)
+  local function _5_()
+    return vim.api.nvim_buf_set_name(buf, s)
+  end
+  pcall(_5_)
+  vim.api.nvim_command("set filetype=markdown")
+  return buf
+end
+_2amodule_2a["open-new-buffer"] = open_new_buffer
+--[[ (open-new-buffer "runbook-docker.md") ]]
 local function stream_into_buffer(stream_generator, prompt)
   local tokens = {}
   local lines = str.split(prompt, "\n")
-  local _let_5_ = open(lines)
-  local win = _let_5_[1]
-  local buf = _let_5_[2]
+  local _let_6_ = open(lines)
+  local win = _let_6_[1]
+  local buf = _let_6_[2]
   local t = show_spinner(buf, core.inc(core.count(lines)))
   nvim.buf_set_lines(buf, -1, -1, false, {"", ""})
-  local function _6_(s)
-    local function _7_()
+  local function _7_(s)
+    local function _8_()
       t:stop()
       tokens = core.concat(tokens, {s})
       return vim.api.nvim_buf_set_lines(buf, core.inc(core.count(lines)), -1, false, str.split(str.join(tokens), "\n"))
     end
-    return vim.schedule(_7_)
+    return vim.schedule(_8_)
   end
-  return stream_generator(prompt, _6_)
+  return stream_generator(prompt, _7_)
 end
 _2amodule_2a["stream-into-buffer"] = stream_into_buffer
+local function stream_into_empty_buffer(stream_generator, prompt, buffer_name)
+  local tokens = {}
+  local buf = open_new_buffer(buffer_name)
+  nvim.buf_set_lines(buf, -1, -1, false, {"", ""})
+  local function _9_(s)
+    tokens = core.concat(tokens, {s})
+    local lines = str.split(str.join(tokens), "\n")
+    local function _10_()
+      return vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    end
+    return vim.schedule(_10_)
+  end
+  return stream_generator(prompt, _9_)
+end
+_2amodule_2a["stream-into-empty-buffer"] = stream_into_empty_buffer
 local function open_file(path)
   local win = vim.api.nvim_tabpage_get_win(0)
   vim.cmd("vsplit")

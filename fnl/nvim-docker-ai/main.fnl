@@ -3,7 +3,8 @@
             filetypes filetypes
             nano-copilot nano-copilot
             core aniseed.core
-            lsps lsps}})
+            lsps lsps
+            runbooks runbooks}})
 
 (defn init []
   (filetypes.init))

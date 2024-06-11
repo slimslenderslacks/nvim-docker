@@ -68,6 +68,18 @@
     (nvim.buf_set_text buf 0 0 0 0 lines) 
     [(open-win buf {:title "Copilot"}) buf]))
 
+(defn open-new-buffer [s]
+  (let [buf (vim.api.nvim_create_buf true false)]
+    (vim.api.nvim_win_set_buf 0 buf)
+    ;; TODO this call fails during autocmd but it partially works enough
+    ;; that the buffer has the right name
+    (pcall (fn [] (vim.api.nvim_buf_set_name buf s)))
+    (vim.api.nvim_command "set filetype=markdown")
+    buf))
+
+(comment
+  (open-new-buffer "runbook-docker.md"))
+
 (defn stream-into-buffer [stream-generator prompt]
   (var tokens [])
   (let [lines (str.split prompt "\n")
@@ -82,6 +94,21 @@
               (t:stop) 
               (set tokens (core.concat tokens [s])) 
               (vim.api.nvim_buf_set_lines buf (core.inc (core.count lines)) -1 false (str.split (str.join tokens) "\n")))))))))
+
+(defn stream-into-empty-buffer [stream-generator prompt buffer-name]
+  (var tokens [])
+  (let [buf (open-new-buffer buffer-name)]
+    (nvim.buf_set_lines buf -1 -1 false ["" ""])
+    (stream-generator
+       prompt
+       (fn [s] 
+         (set tokens (core.concat tokens [s])) 
+         (let [lines (str.split (str.join tokens) "\n")]
+           (vim.schedule
+             (fn [] 
+               (vim.api.nvim_buf_set_lines 
+                   buf 
+                   0 -1 false lines))))))))
 
 (defn open-file [path]
   (let [win (vim.api.nvim_tabpage_get_win 0)]
