@@ -33,7 +33,7 @@ and type `<leader>ai` to ask the LLM a question about the highlighted text.
 Much of the functionality included in this plugin is delivered using Docker images.  When running for the first
 time, things will start up slowly as images are pulled.
 
-Also note that that runbook generation and the `<leader>ai` commands require access to OPENAI.  See [Using Openai] for instructions
+Also note that that runbook generation and the `<leader>ai` commands require access to OPENAI.  See [Using Openai](using-openai) for instructions
 on configuring your API key.
 
 ### Installing with Lazy
@@ -64,7 +64,7 @@ require('lazy').setup(
 )
 ```
 
-This will create a set of default key bindings for the LSP.  See [Key bindings] for instructions on how to configure your own custom
+This will create a set of default key bindings for the LSP.  See [Key bindings](#key-bindings) for instructions on how to configure your own custom
 bindings.
 
 ### Using Ollama
@@ -91,6 +91,8 @@ in two ways.
 
 The default bindings are listed below.
 
+| Mode   | Key binding   | Description |
+| :----  | :------       | :----- |
 | visual | `<leader>ai`  | Ask a question about the selected text |
 | normal | `<leader>K`   | Show hovers at cursor |
 | normal | `<leader>la`  | Show code actions at cursor |
