@@ -30,6 +30,12 @@ and type `<leader>ai` to ask the LLM a question about the highlighted text.
 
 ## Installation
 
+Much of the functionality included in this plugin is delivered using Docker images.  When running for the first
+time, things will start up slowly as images are pulled.
+
+Also note that that runbook generation and the `<leader>ai` commands require access to OPENAI.  See [Using Openai] for instructions
+on configuring your API key.
+
 ### Installing with Lazy
 
 If you're using [lazy](https://github.com/folke/lazy.nvim), then add `docker/labs-nvim-copilot` to your setup.
@@ -58,16 +64,19 @@ require('lazy').setup(
 )
 ```
 
+This will create a set of default key bindings for the LSP.  See [Key bindings] for instructions on how to configure your own custom
+bindings.
+
 ### Using Ollama
 
 If you have [Ollama installed](https://ollama.ai/) installed and running, this plugin
 will sometimes ask if you want to use it.  Managing the Ollama instance is separate from
-the lifecycle of starting and stopping neovim. If you want to use Ollama, you'll have to start it
-and ensure that it's listening on port `11434`.
+the lifecycle of starting and stopping neovim. If you want to try local LLMs, you'll have to make sure
+an Ollama server is listening on port `11434`.
 
 ### Using Openai
 
-If you don't have Ollama installed, the plugin will use Openai. However, this requires an API key, which can be set 
+If you don't have Ollama installed, the plugin will default to using Openai. However, this requires an API key, which can be set 
 in two ways.
 
 1.  Set the `OPENAI_API_KEY` environment variable before you start neovim.
@@ -77,6 +86,29 @@ in two ways.
 
 * **:GenerateRunbook** - generate a runbook markdown file for the current project
 * **:DockerDebug** - download internal representations of project context for debug
+
+## Key bindings
+
+The default bindings are listed below.
+
+| visual | `<leader>ai`  | Ask a question about the selected text |
+| normal | `<leader>K`   | Show hovers at cursor |
+| normal | `<leader>la`  | Show code actions at cursor |
+| normal | `<leader>le`  | Show diagnostics |
+| normal | `<leader>run` | Select a named Runbook Codeblock to run in the terminal |
+
+You can change these bindings using Lazy config from [Installing with Lazy].  The `setup` function
+in `docker.setup` takes a table with an attach handler that that will allow you to customize the key mappings.
+
+```lua
+        require("docker.setup").setup({attach = function()
+          vim.api.buf_set_keyamp(bufnr, "v", "<leader>ai",  "<cmd>lua require('nano-copilot').copilot()<CR>", {noremap = true})
+          vim.api.buf_set_keyamp(bufnr, "n", "<leader>la",  "<cmd>lua vim.lsp.buf.code_action()<CR>", {noremap = true})
+          vim.api.buf_set_keyamp(bufnr, "n", "<leader>le",  "<cmd>lua vim.diagnostic.open_float()<CR>", {noremap = true})
+          vim.api.buf_set_keyamp(bufnr, "n", "K",           "<cmd>lua vim.lsp.buf.hover()<CR>", {noremap = true})
+          vim.api.buf_set_keyamp(bufnr, "n", "<leader>run", "<cmd>lua require('lsps').runInTerminal()<CR>", {noremap = true})
+        end})
+```
 
 ### Building
 
