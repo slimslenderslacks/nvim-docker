@@ -33,7 +33,7 @@ and type `<leader>ai` to ask the LLM a question about the highlighted text.
 Much of the functionality included in this plugin is delivered using Docker images.  When running for the first
 time, things will start up slowly as images are pulled.
 
-Also note that that runbook generation and the `<leader>ai` commands require access to OPENAI.  See [Using Openai](using-openai) for instructions
+Also note that that runbook generation and the `<leader>ai` commands require access to OPENAI.  See [Using Openai](#using-openai) for instructions
 on configuring your API key.
 
 ### Installing with Lazy
