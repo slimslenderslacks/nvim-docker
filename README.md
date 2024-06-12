@@ -85,6 +85,8 @@ in two ways.
 ### Commands
 
 * **:GenerateRunbook** - generate a runbook markdown file for the current project
+* **:RunbookRegister** - register a github ref containing prompts for a new runbook type
+* **:RunbookUnregister** - unregister a runbook type
 * **:DockerDebug** - download internal representations of project context for debug
 
 ## Key bindings

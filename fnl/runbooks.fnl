@@ -32,11 +32,30 @@
                  "run"
                  "--rm"
                  "-v" "/var/run/docker.sock:/var/run/docker.sock"
+                 "--mount" "type=volume,source=docker-prompts,target=/prompts"
                  "vonwig/prompts:latest"
                  "prompts"])))
 
 (comment
   (prompt-types))
+
+(defn register-runbook-type [t]
+  (docker-run ["docker" 
+                 "run"
+                 "--rm"
+                 "-v" "/var/run/docker.sock:/var/run/docker.sock"
+                 "--mount" "type=volume,source=docker-prompts,target=/prompts"
+                 "vonwig/prompts:latest"
+                 "register" t]))
+
+(defn unregister-runbook-type [t]
+  (docker-run ["docker" 
+                 "run"
+                 "--rm"
+                 "-v" "/var/run/docker.sock:/var/run/docker.sock"
+                 "--mount" "type=volume,source=docker-prompts,target=/prompts"
+                 "vonwig/prompts:latest"
+                 "unregister" t]))
 
 (defn prompts [type]
   (docker-run
@@ -111,4 +130,24 @@
       (false error) (core.println 
                         (vim.fn.printf "GenerateRunbook failed to run: %s" error))))
   {:desc "Generate a Runbook"})
+
+(nvim.create_user_command
+  "RunbookRegister"
+  (fn [{:args args}] 
+    (case (pcall register-runbook-type args)
+      (true _) (core.println "RunbookRegister successful")
+      (false error) (core.println 
+                        (vim.fn.printf "RunbookRegister failed to run: %s" error))))
+  {:desc "Register a Runbook"
+   :nargs 1})
+
+(nvim.create_user_command
+  "RunbookUnregister"
+  (fn [{:args args}] 
+    (case (pcall unregister-runbook-type args)
+      (true _) (core.println "RunbookUnregister successful")
+      (false error) (core.println 
+                        (vim.fn.printf "RunbookUnregister failed to run: %s" error))))
+  {:desc "Unregister a Runbook"
+   :nargs 1})
 

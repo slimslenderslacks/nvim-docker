@@ -81,10 +81,18 @@ local function prompt_types()
     local type = _arg_16_["type"]
     return core.assoc(agg, title, type)
   end
-  return core.reduce(_17_, {}, docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "vonwig/prompts:latest", "prompts"}))
+  return core.reduce(_17_, {}, docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "vonwig/prompts:latest", "prompts"}))
 end
 _2amodule_2a["prompt-types"] = prompt_types
 --[[ (prompt-types) ]]
+local function register_runbook_type(t)
+  return docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "vonwig/prompts:latest", "register", t})
+end
+_2amodule_2a["register-runbook-type"] = register_runbook_type
+local function unregister_runbook_type(t)
+  return docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "vonwig/prompts:latest", "unregister", t})
+end
+_2amodule_2a["unregister-runbook-type"] = unregister_runbook_type
 local function prompts(type)
   return docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "vonwig/prompts:latest", vim.fn.getcwd(), "jimclark106", "darwin", type})
 end
@@ -172,4 +180,34 @@ local function _33_(_)
   end
 end
 nvim.create_user_command("GenerateRunbook", _33_, {desc = "Generate a Runbook"})
+local function _39_(_37_)
+  local _arg_38_ = _37_
+  local args = _arg_38_["args"]
+  local _40_, _41_ = pcall(register_runbook_type, args)
+  if ((_40_ == true) and true) then
+    local _ = _41_
+    return core.println("RunbookRegister successful")
+  elseif ((_40_ == false) and (nil ~= _41_)) then
+    local error = _41_
+    return core.println(vim.fn.printf("RunbookRegister failed to run: %s", error))
+  else
+    return nil
+  end
+end
+nvim.create_user_command("RunbookRegister", _39_, {desc = "Register a Runbook", nargs = 1})
+local function _45_(_43_)
+  local _arg_44_ = _43_
+  local args = _arg_44_["args"]
+  local _46_, _47_ = pcall(unregister_runbook_type, args)
+  if ((_46_ == true) and true) then
+    local _ = _47_
+    return core.println("RunbookUnregister successful")
+  elseif ((_46_ == false) and (nil ~= _47_)) then
+    local error = _47_
+    return core.println(vim.fn.printf("RunbookUnregister failed to run: %s", error))
+  else
+    return nil
+  end
+end
+nvim.create_user_command("RunbookUnregister", _45_, {desc = "Unregister a Runbook", nargs = 1})
 return _2amodule_2a
