@@ -1,5 +1,5 @@
-local _2afile_2a = "fnl/commands.fnl"
-local _2amodule_name_2a = "dockerai"
+local _2afile_2a = "fnl/docker/setup.fnl"
+local _2amodule_name_2a = "docker.setup"
 local _2amodule_2a
 do
   package.loaded[_2amodule_name_2a] = {}

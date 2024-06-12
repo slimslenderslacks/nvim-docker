@@ -6,45 +6,62 @@
              string aniseed.string
              util slim.nvim}})
 
-(def opena-api-key (string.trim (core.slurp "/Users/slim/.open-api-key")))
+(defn opena-api-key []
+  (or (case (core.slurp (vim.fn.printf "%s/.open-api-key" (os.getenv "HOME")))
+        s (string.trim s))
+      (os.getenv "OPENAI_API_KEY")
+      (error "unable to lookup OPENAI_API_KEY or read from $HOME/.open-api-key")))
+
+(defn docker-run [args]
+  (case-try (pcall (fn [] (vim.system 
+                             args
+                             {:text true})))
+    (true obj) (obj.wait obj)
+    v (case v
+        {:code 0 :stdout out} (vim.json.decode out)
+        {:code code} (error (vim.fn.printf "docker exited with code %d" code))
+        {:signal signal} (error (vim.fn.printf "docker process was killed by signal %d" signal)))
+    (catch
+      (false e) (error "docker could not be executed"))))
 
 (defn prompt-types []
-  (let [obj (vim.system 
-              ["docker" "run"
-               "--rm"
-               "-v" "/var/run/docker.sock:/var/run/docker.sock"
-               "vonwig/prompts:latest"
-               "prompts"]
-              {:text true})
-        {:stdout out} (obj.wait obj)]
-    (->> 
-      (vim.json.decode out)
-      (core.reduce (fn [agg {:title title :type type}]
-                     (core.assoc agg title type)) {}))))
+  (core.reduce 
+    (fn [agg {:title title :type type}] (core.assoc agg title type)) 
+    {}
+    (docker-run ["docker" 
+                 "run"
+                 "--rm"
+                 "-v" "/var/run/docker.sock:/var/run/docker.sock"
+                 "vonwig/prompts:latest"
+                 "prompts"])))
+
+(comment
+  (prompt-types))
 
 (defn prompts [type]
-  (let [obj (vim.system 
-              ["docker" "run"
-               "--rm"
-               "-v" "/var/run/docker.sock:/var/run/docker.sock"
-               "--mount"
-               "type=volume,source=docker-prompts,target=/prompts"
-               "vonwig/prompts:latest"
-               (vim.fn.getcwd)
-               "jimclark106"
-               "darwin"
-               type]
-              {:text true})
-        {:stdout out :stderr err} (obj.wait obj)]
-    (vim.json.decode out)))
+  (docker-run
+    ["docker" 
+     "run"
+     "--rm"
+     "-v" "/var/run/docker.sock:/var/run/docker.sock"
+     "--mount" "type=volume,source=docker-prompts,target=/prompts"
+     "vonwig/prompts:latest"
+     (vim.fn.getcwd)
+     "jimclark106"
+     "darwin"
+     type]))
 
+(comment
+  (prompts "docker"))
+
+;; TODO deal with failed POSTS
 (defn openai [messages cb]
   (curl.post 
     "https://api.openai.com/v1/chat/completions"
     {:body (vim.json.encode {:model "gpt-4"
                              :messages messages
                              :stream true})
-     :headers {:Authorization (core.str "Bearer " opena-api-key)
+     :headers {:Authorization (core.str "Bearer " (opena-api-key))
                :Content-Type "application/json"}
      :stream (fn [_ chunk _]
                ;; these are sse events
@@ -64,12 +81,10 @@
                      s s))))}))
 
 (comment
-  (prompt-types)
-  (prompts "docker")
   (util.stream-into-empty-buffer openai (prompts "docker"))
   (openai (prompts "docker") (fn [s] (core.println s))))
 
-(defn generate-runbook [_]
+(defn generate-runbook []
   (let [m (core.assoc (prompt-types) "custom" "custom")]
     (vim.ui.select
       (core.keys m)
@@ -86,9 +101,14 @@
 (comment
   (prompt-types)
   (prompts "github:docker/labs-make-runbook?ref=main&path=prompts/docker")
-  (generate-runbook nil))
+  (generate-runbook))
 
-(nvim.create_user_command 
+(nvim.create_user_command
   "GenerateRunbook"
-  generate-runbook
+  (fn [_] 
+    (case (pcall generate-runbook)
+      (true _) (core.println "GenerateRunbook completed")
+      (false error) (core.println 
+                        (vim.fn.printf "GenerateRunbook failed to run: %s" error))))
   {:desc "Generate a Runbook"})
+

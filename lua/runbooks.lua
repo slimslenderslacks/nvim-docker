@@ -18,86 +18,135 @@ _2amodule_locals_2a["fs"] = fs
 _2amodule_locals_2a["nvim"] = nvim
 _2amodule_locals_2a["string"] = string
 _2amodule_locals_2a["util"] = util
-local opena_api_key = string.trim(core.slurp("/Users/slim/.open-api-key"))
-do end (_2amodule_2a)["opena-api-key"] = opena_api_key
+local function opena_api_key()
+  local function _1_()
+    local _2_ = core.slurp(vim.fn.printf("%s/.open-api-key", os.getenv("HOME")))
+    if (nil ~= _2_) then
+      local s = _2_
+      return string.trim(s)
+    else
+      return nil
+    end
+  end
+  return (_1_() or os.getenv("OPENAI_API_KEY") or error("unable to lookup OPENAI_API_KEY or read from $HOME/.open-api-key"))
+end
+_2amodule_2a["opena-api-key"] = opena_api_key
+local function docker_run(args)
+  local function _4_(...)
+    local _5_, _6_ = ...
+    if ((_5_ == true) and (nil ~= _6_)) then
+      local obj = _6_
+      local function _7_(...)
+        local _8_, _9_ = ...
+        if (nil ~= _8_) then
+          local v = _8_
+          local _10_ = v
+          if ((_G.type(_10_) == "table") and ((_10_).code == 0) and (nil ~= (_10_).stdout)) then
+            local out = (_10_).stdout
+            return vim.json.decode(out)
+          elseif ((_G.type(_10_) == "table") and (nil ~= (_10_).code)) then
+            local code = (_10_).code
+            return error(vim.fn.printf("docker exited with code %d", code))
+          elseif ((_G.type(_10_) == "table") and (nil ~= (_10_).signal)) then
+            local signal = (_10_).signal
+            return error(vim.fn.printf("docker process was killed by signal %d", signal))
+          else
+            return nil
+          end
+        elseif ((_8_ == false) and (nil ~= _9_)) then
+          local e = _9_
+          return error("docker could not be executed")
+        else
+          return nil
+        end
+      end
+      return _7_(obj.wait(obj))
+    elseif ((_5_ == false) and (nil ~= _6_)) then
+      local e = _6_
+      return error("docker could not be executed")
+    else
+      return nil
+    end
+  end
+  local function _14_()
+    return vim.system(args, {text = true})
+  end
+  return _4_(pcall(_14_))
+end
+_2amodule_2a["docker-run"] = docker_run
 local function prompt_types()
-  local obj = vim.system({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "vonwig/prompts:latest", "prompts"}, {text = true})
-  local _let_1_ = obj.wait(obj)
-  local out = _let_1_["stdout"]
-  local function _4_(agg, _2_)
-    local _arg_3_ = _2_
-    local title = _arg_3_["title"]
-    local type = _arg_3_["type"]
+  local function _17_(agg, _15_)
+    local _arg_16_ = _15_
+    local title = _arg_16_["title"]
+    local type = _arg_16_["type"]
     return core.assoc(agg, title, type)
   end
-  return core.reduce(_4_, {}, vim.json.decode(out))
+  return core.reduce(_17_, {}, docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "vonwig/prompts:latest", "prompts"}))
 end
 _2amodule_2a["prompt-types"] = prompt_types
+--[[ (prompt-types) ]]
 local function prompts(type)
-  local obj = vim.system({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "vonwig/prompts:latest", vim.fn.getcwd(), "jimclark106", "darwin", type}, {text = true})
-  local _let_5_ = obj.wait(obj)
-  local out = _let_5_["stdout"]
-  local err = _let_5_["stderr"]
-  return vim.json.decode(out)
+  return docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "vonwig/prompts:latest", vim.fn.getcwd(), "jimclark106", "darwin", type})
 end
 _2amodule_2a["prompts"] = prompts
+--[[ (prompts "docker") ]]
 local function openai(messages, cb)
-  local function _6_(_, chunk, _0)
-    local function _7_(...)
-      local _8_ = ...
-      if (nil ~= _8_) then
-        local s = _8_
-        local function _9_(...)
-          local _10_ = ...
-          if (nil ~= _10_) then
-            local s0 = _10_
-            local function _11_(...)
-              local _12_, _13_ = ...
-              if ((_12_ == true) and (nil ~= _13_)) then
-                local obj = _13_
+  local function _18_(_, chunk, _0)
+    local function _19_(...)
+      local _20_ = ...
+      if (nil ~= _20_) then
+        local s = _20_
+        local function _21_(...)
+          local _22_ = ...
+          if (nil ~= _22_) then
+            local s0 = _22_
+            local function _23_(...)
+              local _24_, _25_ = ...
+              if ((_24_ == true) and (nil ~= _25_)) then
+                local obj = _25_
                 return core.first(obj.choices).delta.content
-              elseif (nil ~= _12_) then
-                local s1 = _12_
+              elseif (nil ~= _24_) then
+                local s1 = _24_
                 return s1
               else
                 return nil
               end
             end
-            local function _15_()
+            local function _27_()
               return vim.json.decode(s0)
             end
-            return _11_(pcall(_15_))
-          elseif (nil ~= _10_) then
-            local s0 = _10_
+            return _23_(pcall(_27_))
+          elseif (nil ~= _22_) then
+            local s0 = _22_
             return s0
           else
             return nil
           end
         end
-        local function _17_(...)
+        local function _29_(...)
           if vim.startswith(s, "data:") then
             return s:sub(7)
           else
             return nil
           end
         end
-        return _9_(_17_(...))
-      elseif (nil ~= _8_) then
-        local s = _8_
+        return _21_(_29_(...))
+      elseif (nil ~= _20_) then
+        local s = _20_
         return s
       else
         return nil
       end
     end
-    return cb(_7_(chunk))
+    return cb(_19_(chunk))
   end
-  return curl.post("https://api.openai.com/v1/chat/completions", {body = vim.json.encode({model = "gpt-4", messages = messages, stream = true}), headers = {Authorization = core.str("Bearer ", opena_api_key), ["Content-Type"] = "application/json"}, stream = _6_})
+  return curl.post("https://api.openai.com/v1/chat/completions", {body = vim.json.encode({model = "gpt-4", messages = messages, stream = true}), headers = {Authorization = core.str("Bearer ", opena_api_key()), ["Content-Type"] = "application/json"}, stream = _18_})
 end
 _2amodule_2a["openai"] = openai
---[[ (prompt-types) (prompts "docker") (util.stream-into-empty-buffer openai (prompts "docker")) (openai (prompts "docker") (fn [s] (core.println s))) ]]
-local function generate_runbook(_)
+--[[ (util.stream-into-empty-buffer openai (prompts "docker")) (openai (prompts "docker") (fn [s] (core.println s))) ]]
+local function generate_runbook()
   local m = core.assoc(prompt_types(), "custom", "custom")
-  local function _19_(selected, _0)
+  local function _31_(selected, _)
     local prompt_type
     if (selected == "custom") then
       prompt_type = vim.fn.input("prompt github ref: ")
@@ -106,9 +155,21 @@ local function generate_runbook(_)
     end
     return util["stream-into-empty-buffer"](openai, prompts(prompt_type), core.str("runbook-", core.get(m, selected), ".md"))
   end
-  return vim.ui.select(core.keys(m), {prompt = "Select prompt type"}, _19_)
+  return vim.ui.select(core.keys(m), {prompt = "Select prompt type"}, _31_)
 end
 _2amodule_2a["generate-runbook"] = generate_runbook
---[[ (prompt-types) (prompts "github:docker/labs-make-runbook?ref=main&path=prompts/docker") (generate-runbook nil) ]]
-nvim.create_user_command("GenerateRunbook", generate_runbook, {desc = "Generate a Runbook"})
+--[[ (prompt-types) (prompts "github:docker/labs-make-runbook?ref=main&path=prompts/docker") (generate-runbook) ]]
+local function _33_(_)
+  local _34_, _35_ = pcall(generate_runbook)
+  if ((_34_ == true) and true) then
+    local _0 = _35_
+    return core.println("GenerateRunbook completed")
+  elseif ((_34_ == false) and (nil ~= _35_)) then
+    local error = _35_
+    return core.println(vim.fn.printf("GenerateRunbook failed to run: %s", error))
+  else
+    return nil
+  end
+end
+nvim.create_user_command("GenerateRunbook", _33_, {desc = "Generate a Runbook"})
 return _2amodule_2a

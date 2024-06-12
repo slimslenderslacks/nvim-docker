@@ -1,4 +1,4 @@
-(module dockerai
+(module docker.setup
   {autoload {nvim aniseed.nvim
              core aniseed.core
              string aniseed.string

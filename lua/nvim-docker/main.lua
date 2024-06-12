@@ -1,5 +1,5 @@
-local _2afile_2a = "fnl/nvim-docker-ai/main.fnl"
-local _2amodule_name_2a = "nvim-docker-ai.main"
+local _2afile_2a = "fnl/nvim-docker/main.fnl"
+local _2amodule_name_2a = "nvim-docker.main"
 local _2amodule_2a
 do
   package.loaded[_2amodule_name_2a] = {}
@@ -10,7 +10,7 @@ do
   _2amodule_2a["aniseed/locals"] = {}
   _2amodule_locals_2a = (_2amodule_2a)["aniseed/locals"]
 end
-local commands, core, filetypes, lsps, nano_copilot, runbooks = require("commands"), require("nvim-docker-ai.aniseed.core"), require("filetypes"), require("lsps"), require("nano-copilot"), require("runbooks")
+local commands, core, filetypes, lsps, nano_copilot, runbooks = require("docker.setup"), require("aniseed.core"), require("filetypes"), require("lsps"), require("nano-copilot"), require("runbooks")
 do end (_2amodule_locals_2a)["commands"] = commands
 _2amodule_locals_2a["core"] = core
 _2amodule_locals_2a["filetypes"] = filetypes
