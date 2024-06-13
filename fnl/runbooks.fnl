@@ -3,12 +3,30 @@
              nvim aniseed.nvim
              curl plenary.curl
              fs aniseed.fs
-             string aniseed.string
+             str aniseed.string
              util slim.nvim}})
+
+(defn parse-git-ref [s]
+  (case-try s
+    s (vim.split s "?")
+    [ref ?opts] (case (string.match ref "github:(%S+)/(%S+)")
+                  (owner repo) [{:owner owner :repo repo} ?opts])
+    [m ?opts] (if ?opts 
+                (core.reduce (fn [agg s]
+                               (let [[k v] (vim.split s "=")]
+                                 (core.assoc agg k v)))
+                             m 
+                             (vim.split ?opts "&"))
+                m)))
+
+(comment
+  (parse-git-ref "github:docker/labs-make-runbook?ref=main&path=prompts/docker")
+  (parse-git-ref "github:docker/labs-make-runbook")
+  (parse-git-ref "alskfj"))
 
 (defn opena-api-key []
   (or (case (core.slurp (vim.fn.printf "%s/.open-api-key" (os.getenv "HOME")))
-        s (string.trim s))
+        s (str.trim s))
       (os.getenv "OPENAI_API_KEY")
       (error "unable to lookup OPENAI_API_KEY or read from $HOME/.open-api-key")))
 
@@ -103,6 +121,16 @@
   (util.stream-into-empty-buffer openai (prompts "docker"))
   (openai (prompts "docker") (fn [s] (core.println s))))
 
+(defn generate-friendly-prompt-name [prompt-type]
+  (case (parse-git-ref prompt-type)
+    {:repo repo :path path} (string.format "runbook.gh-%s-%s.md" repo (string.gsub path "/" "-"))
+    {:repo repo} (vim.fn.printf "runbook.gh-%s.md" repo)
+    _ (vim.fn.printf "runbook.%s.md" prompt-type)))
+
+(comment
+  (generate-friendly-prompt-name "github:docker/labs-make-runbook?ref=main&path=prompts/docker")
+  (generate-friendly-prompt-name "whatever"))
+
 (defn generate-runbook []
   (let [m (core.assoc (prompt-types) "custom" "custom")]
     (vim.ui.select
@@ -115,7 +143,7 @@
           (util.stream-into-empty-buffer
             openai
             (prompts prompt-type)
-            (core.str "runbook-" (core.get m selected) ".md")))))))
+            (generate-friendly-prompt-name (core.get m selected))))))))
 
 (comment
   (prompt-types)
