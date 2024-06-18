@@ -3,6 +3,7 @@
              core aniseed.core
              fs aniseed.fs
              nvim aniseed.nvim
+             str aniseed.string
              keymaps keymaps
              sha2 sha2}})
 
@@ -40,13 +41,38 @@
     (set commands (core.assoc commands code s))
     code))
 
+(defn last-2 [v]
+  (let [c (length v)
+        n (if (>= c 2)
+            (- c 1)
+            1)]
+    (fcollect [i n c]
+              (. v i))))
+
+(defn last-n-segments [s separator]
+  (->> (str.split s separator)
+       (last-2)
+       (str.join separator)))
+
+(defn block-map [m]
+  (core.reduce
+    (fn [agg [uri blocks]]
+      (core.reduce
+        (fn [m {:command command :script script}]
+          (core.assoc m (string.format "%-30s (%s)" command (last-n-segments uri "/")) script))
+        agg
+        blocks))
+    {}
+    (core.kv-pairs m)))
+
 (defn runInTerminal []
-  (vim.ui.select
-    (core.keys commands)
-    {:prompt "Select a command:"}
-    (fn [command _]
-      (when command
-        (run-in-terminal (. commands command))))))
+  (let [blocks-in-scope (block-map commands)]
+    (vim.ui.select
+      (core.keys blocks-in-scope)
+      {:prompt "Select a command:"}
+      (fn [command _]
+        (when command
+          (run-in-terminal (. blocks-in-scope command)))))))
 
 ; lsp $terminal/run request handler
 (defn terminal-run-handler [err result ctx config]
@@ -97,11 +123,16 @@
     ; TODO hack - how do we force redraw of current buffer?  edit buffer does it but ...
     r))
 
-(defn terminal-registration-handler [err result ctx config]
-  (->> (. result :blocks)
-       (core.map (fn [m] 
-                   (set commands 
-                     (core.assoc commands (. m :command) (. m :script)))))))
+;; notification will be a map with two keys (:uri and :blocks)
+(defn terminal-registration-handler [err result ctx config] 
+  (let [{:blocks blocks :uri uri} result]
+    (set commands 
+         (core.assoc commands uri 
+                     (->> blocks
+                          (core.reduce 
+                            (fn [agg m] 
+                              (core.assoc agg (. m :command) (. m :script))
+                              {})))))))
 
 (vim.api.nvim_set_keymap :n  ",run" (.. ":lua require('lsps').runInTerminal()<CR>") {})
 
