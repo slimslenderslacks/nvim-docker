@@ -54,8 +54,55 @@
                  "vonwig/prompts:latest"
                  "prompts"])))
 
+(defn prompt-runner 
+  [args callback]
+  (vim.system 
+    args
+    {:text true 
+     :stdin false 
+     :stdout (fn [err data]
+               (callback data))
+     :stderr (fn [err data]
+               (callback data))}
+    (fn [{:code code :signal signal &as data}])))
+
+(defn execute-prompt [type]
+  (util.start-streaming
+    (fn [callback]
+      (prompt-runner ["docker"
+                      "run"
+                      "--rm"
+                      "-v" "/var/run/docker.sock:/var/run/docker.sock"
+                      "--mount" "type=volume,source=docker-prompts,target=/prompts"
+                      "--mount" (string.format "type=bind,source=%s,target=/project" (vim.fn.getcwd))
+                      "--mount" "type=bind,source=/Users/slim/.openai-api-key,target=/root/.openai-api-key"
+                      "vonwig/prompts:latest"
+                      "run"
+                      (vim.fn.getcwd)
+                      "jimclark106"
+                      "darwin"
+                      type]
+                     callback))))
+
+(defn prompt-run
+  []
+  (let [prompts ["github:docker/labs-githooks?ref=main&path=prompts/git_hooks_just_llm"
+                 "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_with_linguist"
+                 "github:docker/labs-githooks?ref=main&path=prompts/git_hooks"
+                 "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_single_step"]]
+    (vim.ui.select
+      prompts
+      {:prompt "Select LLM"}
+      (fn [selected _]
+        (let [prompt (vim.fn.input "Prompt: ")]
+          (execute-prompt selected))))))
+
+(def promptRun prompt-run)
+
 (comment
-  (prompt-types))
+  (prompt-run))
+
+(nvim.set_keymap :n :<leader>assist ":lua require('runbooks').promptRun()<CR>" {})
 
 (defn register-runbook-type [t]
   (docker-run ["docker" 

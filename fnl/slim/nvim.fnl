@@ -80,6 +80,19 @@
 (comment
   (open-new-buffer "runbook-docker.md"))
 
+(defn start-streaming [stream-generator]
+  (var tokens [])
+  (let [buf (open-new-buffer "chat")]
+    (let [t (show-spinner buf 1) ]
+      (nvim.buf_set_lines buf -1 -1 false ["" ""])
+      (stream-generator
+        (fn [s] 
+          (vim.schedule 
+            (fn [] 
+              (t:stop) 
+              (set tokens (core.concat tokens [s])) 
+              (vim.api.nvim_buf_set_lines buf 1 -1 false (str.split (str.join tokens) "\n")))))))))
+
 (defn stream-into-buffer [stream-generator prompt]
   (var tokens [])
   (let [lines (str.split prompt "\n")

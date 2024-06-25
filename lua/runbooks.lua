@@ -147,7 +147,42 @@ local function prompt_types()
   return core.reduce(_33_, {}, docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "vonwig/prompts:latest", "prompts"}))
 end
 _2amodule_2a["prompt-types"] = prompt_types
---[[ (prompt-types) ]]
+local function prompt_runner(args, callback)
+  local function _34_(err, data)
+    return callback(data)
+  end
+  local function _35_(err, data)
+    return callback(data)
+  end
+  local function _38_(_36_)
+    local _arg_37_ = _36_
+    local code = _arg_37_["code"]
+    local signal = _arg_37_["signal"]
+    local data = _arg_37_
+  end
+  return vim.system(args, {text = true, stdout = _34_, stderr = _35_, stdin = false}, _38_)
+end
+_2amodule_2a["prompt-runner"] = prompt_runner
+local function execute_prompt(type)
+  local function _39_(callback)
+    return prompt_runner({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "--mount", string.format("type=bind,source=%s,target=/project", vim.fn.getcwd()), "--mount", "type=bind,source=/Users/slim/.openai-api-key,target=/root/.openai-api-key", "vonwig/prompts:latest", "run", vim.fn.getcwd(), "jimclark106", "darwin", type}, callback)
+  end
+  return util["start-streaming"](_39_)
+end
+_2amodule_2a["execute-prompt"] = execute_prompt
+local function prompt_run()
+  local prompts = {"github:docker/labs-githooks?ref=main&path=prompts/git_hooks_just_llm", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_with_linguist", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_single_step"}
+  local function _40_(selected, _)
+    local prompt = vim.fn.input("Prompt: ")
+    return execute_prompt(selected)
+  end
+  return vim.ui.select(prompts, {prompt = "Select LLM"}, _40_)
+end
+_2amodule_2a["prompt-run"] = prompt_run
+local promptRun = prompt_run
+_2amodule_2a["promptRun"] = promptRun
+--[[ (prompt-run) ]]
+nvim.set_keymap("n", "<leader>assist", ":lua require('runbooks').promptRun()<CR>", {})
 local function register_runbook_type(t)
   return docker_run({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "vonwig/prompts:latest", "register", t})
 end
@@ -162,70 +197,70 @@ end
 _2amodule_2a["prompts"] = prompts
 --[[ (prompts "docker") ]]
 local function openai(messages, cb)
-  local function _34_(_, chunk, _0)
-    local function _35_(...)
-      local _36_ = ...
-      if (nil ~= _36_) then
-        local s = _36_
-        local function _37_(...)
-          local _38_ = ...
-          if (nil ~= _38_) then
-            local s0 = _38_
-            local function _39_(...)
-              local _40_, _41_ = ...
-              if ((_40_ == true) and (nil ~= _41_)) then
-                local obj = _41_
+  local function _41_(_, chunk, _0)
+    local function _42_(...)
+      local _43_ = ...
+      if (nil ~= _43_) then
+        local s = _43_
+        local function _44_(...)
+          local _45_ = ...
+          if (nil ~= _45_) then
+            local s0 = _45_
+            local function _46_(...)
+              local _47_, _48_ = ...
+              if ((_47_ == true) and (nil ~= _48_)) then
+                local obj = _48_
                 return core.first(obj.choices).delta.content
-              elseif (nil ~= _40_) then
-                local s1 = _40_
+              elseif (nil ~= _47_) then
+                local s1 = _47_
                 return s1
               else
                 return nil
               end
             end
-            local function _43_()
+            local function _50_()
               return vim.json.decode(s0)
             end
-            return _39_(pcall(_43_))
-          elseif (nil ~= _38_) then
-            local s0 = _38_
+            return _46_(pcall(_50_))
+          elseif (nil ~= _45_) then
+            local s0 = _45_
             return s0
           else
             return nil
           end
         end
-        local function _45_(...)
+        local function _52_(...)
           if vim.startswith(s, "data:") then
             return s:sub(7)
           else
             return nil
           end
         end
-        return _37_(_45_(...))
-      elseif (nil ~= _36_) then
-        local s = _36_
+        return _44_(_52_(...))
+      elseif (nil ~= _43_) then
+        local s = _43_
         return s
       else
         return nil
       end
     end
-    return cb(_35_(chunk))
+    return cb(_42_(chunk))
   end
-  return curl.post("https://api.openai.com/v1/chat/completions", {body = vim.json.encode({model = "gpt-4", messages = messages, stream = true}), headers = {Authorization = core.str("Bearer ", opena_api_key()), ["Content-Type"] = "application/json"}, stream = _34_})
+  return curl.post("https://api.openai.com/v1/chat/completions", {body = vim.json.encode({model = "gpt-4", messages = messages, stream = true}), headers = {Authorization = core.str("Bearer ", opena_api_key()), ["Content-Type"] = "application/json"}, stream = _41_})
 end
 _2amodule_2a["openai"] = openai
 --[[ (util.stream-into-empty-buffer openai (prompts "docker")) (openai (prompts "docker") (fn [s] (core.println s))) ]]
 local function generate_friendly_prompt_name(prompt_type)
-  local _47_ = parse_git_ref(prompt_type)
-  if ((_G.type(_47_) == "table") and (nil ~= (_47_).repo) and (nil ~= (_47_).path)) then
-    local repo = (_47_).repo
-    local path = (_47_).path
+  local _54_ = parse_git_ref(prompt_type)
+  if ((_G.type(_54_) == "table") and (nil ~= (_54_).repo) and (nil ~= (_54_).path)) then
+    local repo = (_54_).repo
+    local path = (_54_).path
     return string.format("runbook.gh-%s-%s.md", repo, string.gsub(path, "/", "-"))
-  elseif ((_G.type(_47_) == "table") and (nil ~= (_47_).repo)) then
-    local repo = (_47_).repo
+  elseif ((_G.type(_54_) == "table") and (nil ~= (_54_).repo)) then
+    local repo = (_54_).repo
     return vim.fn.printf("runbook.gh-%s.md", repo)
   elseif true then
-    local _ = _47_
+    local _ = _54_
     return vim.fn.printf("runbook.%s.md", prompt_type)
   else
     return nil
@@ -235,7 +270,7 @@ _2amodule_2a["generate-friendly-prompt-name"] = generate_friendly_prompt_name
 --[[ (generate-friendly-prompt-name "github:docker/labs-make-runbook?ref=main&path=prompts/docker") (generate-friendly-prompt-name "whatever") ]]
 local function generate_runbook()
   local m = core.assoc(prompt_types(), "custom", "custom")
-  local function _49_(selected, _)
+  local function _56_(selected, _)
     local prompt_type
     if (selected == "custom") then
       prompt_type = vim.fn.input("prompt github ref: ")
@@ -244,51 +279,51 @@ local function generate_runbook()
     end
     return util["stream-into-empty-buffer"](openai, prompts(prompt_type), generate_friendly_prompt_name(core.get(m, selected)))
   end
-  return vim.ui.select(core.keys(m), {prompt = "Select prompt type"}, _49_)
+  return vim.ui.select(core.keys(m), {prompt = "Select prompt type"}, _56_)
 end
 _2amodule_2a["generate-runbook"] = generate_runbook
 --[[ (prompt-types) (prompts "github:docker/labs-make-runbook?ref=main&path=prompts/docker") (generate-runbook) ]]
-local function _51_(_)
-  local _52_, _53_ = pcall(generate_runbook)
-  if ((_52_ == true) and true) then
-    local _0 = _53_
+local function _58_(_)
+  local _59_, _60_ = pcall(generate_runbook)
+  if ((_59_ == true) and true) then
+    local _0 = _60_
     return core.println("GenerateRunbook completed")
-  elseif ((_52_ == false) and (nil ~= _53_)) then
-    local error = _53_
+  elseif ((_59_ == false) and (nil ~= _60_)) then
+    local error = _60_
     return core.println(vim.fn.printf("GenerateRunbook failed to run: %s", error))
   else
     return nil
   end
 end
-nvim.create_user_command("GenerateRunbook", _51_, {desc = "Generate a Runbook"})
-local function _57_(_55_)
-  local _arg_56_ = _55_
-  local args = _arg_56_["args"]
-  local _58_, _59_ = pcall(register_runbook_type, args)
-  if ((_58_ == true) and true) then
-    local _ = _59_
+nvim.create_user_command("GenerateRunbook", _58_, {desc = "Generate a Runbook"})
+local function _64_(_62_)
+  local _arg_63_ = _62_
+  local args = _arg_63_["args"]
+  local _65_, _66_ = pcall(register_runbook_type, args)
+  if ((_65_ == true) and true) then
+    local _ = _66_
     return core.println("RunbookRegister successful")
-  elseif ((_58_ == false) and (nil ~= _59_)) then
-    local error = _59_
+  elseif ((_65_ == false) and (nil ~= _66_)) then
+    local error = _66_
     return core.println(vim.fn.printf("RunbookRegister failed to run: %s", error))
   else
     return nil
   end
 end
-nvim.create_user_command("RunbookRegister", _57_, {desc = "Register a Runbook", nargs = 1})
-local function _63_(_61_)
-  local _arg_62_ = _61_
-  local args = _arg_62_["args"]
-  local _64_, _65_ = pcall(unregister_runbook_type, args)
-  if ((_64_ == true) and true) then
-    local _ = _65_
+nvim.create_user_command("RunbookRegister", _64_, {desc = "Register a Runbook", nargs = 1})
+local function _70_(_68_)
+  local _arg_69_ = _68_
+  local args = _arg_69_["args"]
+  local _71_, _72_ = pcall(unregister_runbook_type, args)
+  if ((_71_ == true) and true) then
+    local _ = _72_
     return core.println("RunbookUnregister successful")
-  elseif ((_64_ == false) and (nil ~= _65_)) then
-    local error = _65_
+  elseif ((_71_ == false) and (nil ~= _72_)) then
+    local error = _72_
     return core.println(vim.fn.printf("RunbookUnregister failed to run: %s", error))
   else
     return nil
   end
 end
-nvim.create_user_command("RunbookUnregister", _63_, {desc = "Unregister a Runbook", nargs = 1})
+nvim.create_user_command("RunbookUnregister", _70_, {desc = "Unregister a Runbook", nargs = 1})
 return _2amodule_2a
