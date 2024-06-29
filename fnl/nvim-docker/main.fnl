@@ -4,7 +4,8 @@
             nano-copilot nano-copilot
             core aniseed.core
             lsps lsps
-            runbooks runbooks}})
+            runbooks runbooks
+            prompt-runner prompts.runner}})
 
 (defn init []
   (filetypes.init))

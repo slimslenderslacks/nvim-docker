@@ -98,6 +98,7 @@ _2amodule_2a["open-new-buffer"] = open_new_buffer
 --[[ (open-new-buffer "runbook-docker.md") ]]
 local function start_streaming(stream_generator)
   local tokens = {}
+  local append = true
   local buf = open_new_buffer("chat")
   local t = show_spinner(buf, 1)
   nvim.buf_set_lines(buf, -1, -1, false, {"", ""})
@@ -105,45 +106,61 @@ local function start_streaming(stream_generator)
     local function _7_()
       t:stop()
       tokens = core.concat(tokens, {s})
-      return vim.api.nvim_buf_set_lines(buf, 1, -1, false, str.split(str.join(tokens), "\n"))
+      vim.api.nvim_buf_set_lines(buf, 1, -1, false, str.split(str.join(tokens), "\n"))
+      append = true
+      return nil
     end
     return vim.schedule(_7_)
   end
-  return stream_generator(_6_)
+  local function _8_(s)
+    local function _9_()
+      t:stop()
+      if append then
+        tokens = core.concat(tokens, {s})
+      else
+        tokens = core.concat(core.butlast(tokens), {s})
+      end
+      vim.api.nvim_buf_set_lines(buf, 1, -1, false, str.split(str.join(tokens), "\n"))
+      append = false
+      return nil
+    end
+    return vim.schedule(_9_)
+  end
+  return stream_generator(_6_, _8_)
 end
 _2amodule_2a["start-streaming"] = start_streaming
 local function stream_into_buffer(stream_generator, prompt)
   local tokens = {}
   local lines = str.split(prompt, "\n")
-  local _let_8_ = open(lines)
-  local win = _let_8_[1]
-  local buf = _let_8_[2]
+  local _let_11_ = open(lines)
+  local win = _let_11_[1]
+  local buf = _let_11_[2]
   local t = show_spinner(buf, core.inc(core.count(lines)))
   nvim.buf_set_lines(buf, -1, -1, false, {"", ""})
-  local function _9_(s)
-    local function _10_()
+  local function _12_(s)
+    local function _13_()
       t:stop()
       tokens = core.concat(tokens, {s})
       return vim.api.nvim_buf_set_lines(buf, core.inc(core.count(lines)), -1, false, str.split(str.join(tokens), "\n"))
     end
-    return vim.schedule(_10_)
+    return vim.schedule(_13_)
   end
-  return stream_generator(prompt, _9_)
+  return stream_generator(prompt, _12_)
 end
 _2amodule_2a["stream-into-buffer"] = stream_into_buffer
 local function stream_into_empty_buffer(stream_generator, prompt, buffer_name)
   local tokens = {}
   local buf = open_new_buffer(buffer_name)
   nvim.buf_set_lines(buf, -1, -1, false, {"", ""})
-  local function _11_(s)
+  local function _14_(s)
     tokens = core.concat(tokens, {s})
     local lines = str.split(str.join(tokens), "\n")
-    local function _12_()
+    local function _15_()
       return vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     end
-    return vim.schedule(_12_)
+    return vim.schedule(_15_)
   end
-  return stream_generator(prompt, _11_)
+  return stream_generator(prompt, _14_)
 end
 _2amodule_2a["stream-into-empty-buffer"] = stream_into_empty_buffer
 local function open_file(path)

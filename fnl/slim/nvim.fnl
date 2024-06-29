@@ -82,6 +82,7 @@
 
 (defn start-streaming [stream-generator]
   (var tokens [])
+  (var append true)
   (let [buf (open-new-buffer "chat")]
     (let [t (show-spinner buf 1) ]
       (nvim.buf_set_lines buf -1 -1 false ["" ""])
@@ -91,7 +92,22 @@
             (fn [] 
               (t:stop) 
               (set tokens (core.concat tokens [s])) 
-              (vim.api.nvim_buf_set_lines buf 1 -1 false (str.split (str.join tokens) "\n")))))))))
+              ;; reset everything
+              (vim.api.nvim_buf_set_lines buf 1 -1 false (str.split (str.join tokens) "\n"))
+              (set append true))))
+        (fn [s] 
+          ;; TODO work differently for messages versus functions
+          ;; functions update the last token
+          ;; messages are appended
+          (vim.schedule 
+            (fn [] 
+              (t:stop)
+              (if append
+                (set tokens (core.concat tokens [s]))
+                (set tokens (core.concat (core.butlast tokens) [s]))) 
+              ;; reset everything
+              (vim.api.nvim_buf_set_lines buf 1 -1 false (str.split (str.join tokens) "\n"))
+              (set append false))))))))
 
 (defn stream-into-buffer [stream-generator prompt]
   (var tokens [])
