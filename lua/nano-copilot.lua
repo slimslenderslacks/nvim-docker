@@ -34,7 +34,7 @@ local function ollama(system_prompt, prompt, cb)
   local function _1_(_, chunk, _0)
     return cb(vim.json.decode(chunk).response)
   end
-  return curl.post("http://localhost:11434/api/generate", {body = vim.json.encode({model = "llama2", prompt = prompt, system = system_prompt, stream = true}), stream = _1_})
+  return curl.post("http://localhost:11434/api/generate", {body = vim.json.encode({model = "llama3.1", prompt = prompt, system = system_prompt, stream = true}), stream = _1_})
 end
 _2amodule_2a["ollama"] = ollama
 local function execute_prompt(prompt)
@@ -46,13 +46,12 @@ end
 _2amodule_2a["execute-prompt"] = execute_prompt
 --[[ (execute-prompt "What does a Dockerfile look like?") (vim.fn.input "Question: ") ]]
 local function copilot()
-  local prompts = {"run base LLM", "run augmented LLM"}
+  local prompts = {"ask", "ask about snippet"}
   local function _3_(selected, _)
-    local prompt = ("I have a question about this: " .. vim.fn.input("Question: ") .. "\n\n Here is the code:\n```\n" .. str.join("\n", util["get-current-buffer-selection"]()) .. "\n```\n")
-    if (selected == "run base LLM") then
-      return execute_prompt(prompt)
+    if (selected == "ask about snippet") then
+      return execute_prompt(("\n\n Here is a code snippet that I'm working on:\n```\n" .. str.join("\n", util["get-current-buffer-selection"]()) .. "\n```\n\n" .. vim.fn.input("Ask Assistant: ")))
     else
-      return execute_prompt(prompt)
+      return execute_prompt(str.join("\n", util["get-current-buffer-selection"]()))
     end
   end
   return vim.ui.select(prompts, {prompt = "Select LLM"}, _3_)

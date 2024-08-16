@@ -40,18 +40,18 @@ local function jwt()
   end
 end
 _2amodule_2a["jwt"] = jwt
-local function use_bash(s)
-  return s
+local function use_bash(pwd, s)
+  return ("cd " .. pwd .. " && " .. s)
 end
 _2amodule_2a["use-bash"] = use_bash
-local function run_in_terminal(s)
+local function run_in_terminal(pwd, s)
   local current_win = nvim.tabpage_get_win(0)
   local original_buf = nvim.win_get_buf(current_win)
   local term_buf = nvim.create_buf(false, true)
   vim.cmd("split")
   local new_win = nvim.tabpage_get_win(0)
   nvim.win_set_buf(new_win, term_buf)
-  return nvim.fn.termopen(use_bash(s))
+  return nvim.fn.termopen(use_bash(pwd, s))
 end
 _2amodule_2a["run-in-terminal"] = run_in_terminal
 local commands = {}
@@ -86,6 +86,11 @@ local function last_n_segments(s, separator)
   return str.join(separator, last_2(str.split(s, separator)))
 end
 _2amodule_2a["last-n-segments"] = last_n_segments
+local function uri_basedir(uri)
+  return nvim.fn.fnamemodify(vim.fn.substitute(uri, "file://", "", ""), ":h")
+end
+_2amodule_2a["uri-basedir"] = uri_basedir
+--[[ (uri-basedir "file:///Users/slim") ]]
 local function block_map(m)
   local function _8_(agg, _6_)
     local _arg_7_ = _6_
@@ -95,7 +100,7 @@ local function block_map(m)
       local _arg_10_ = _9_
       local command = _arg_10_["command"]
       local script = _arg_10_["script"]
-      return core.assoc(m0, string.format("%-30s (%s)", command, last_n_segments(uri, "/")), script)
+      return core.assoc(m0, string.format("%-30s (%s)", command, last_n_segments(uri, "/")), {basedir = uri_basedir(uri), script = script})
     end
     return core.reduce(_11_, agg, blocks)
   end
@@ -106,7 +111,7 @@ local function runInTerminal()
   local blocks_in_scope = block_map(commands)
   local function _12_(command, _)
     if command then
-      return run_in_terminal(blocks_in_scope[command])
+      return run_in_terminal(blocks_in_scope[command].basedir, blocks_in_scope[command].script)
     else
       return nil
     end
@@ -120,7 +125,7 @@ local function terminal_run_handler(err, result, ctx, config)
   else
   end
   core.println("terminal-run", result)
-  return run_in_terminal(result.content)
+  return run_in_terminal(uri_basedir(result.uri), result.content)
 end
 _2amodule_2a["terminal-run-handler"] = terminal_run_handler
 local function notify(channel, data)
@@ -216,7 +221,7 @@ local function list()
   return core.map(_28_, vim.lsp.get_clients())
 end
 _2amodule_2a["list"] = list
-local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, update_in_insert = false, virtual_text = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
+local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, virtual_text = false, update_in_insert = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
 _2amodule_2a["handlers"] = handlers
 local function docker_lsp_nix_runner(root_dir)
   return {"nix", "run", "--quiet", "--log-format", "raw", "/Users/slim/docker/lsp/#clj", "--", "--pod-exe-path", "/Users/slim/docker/babashka-pod-docker/result/bin/entrypoint", "--profile", "all"}
@@ -227,7 +232,7 @@ local function docker_lsp_clj_runner(root_dir)
 end
 _2amodule_2a["docker-lsp-clj-runner"] = docker_lsp_clj_runner
 local function docker_lsp_docker_runner(root_dir)
-  return {"docker", "run", "--name", core.str("nvim", core.rand()), "--rm", "--init", "--interactive", "--pull", "always", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "--label", core.str("com.docker.lsp.workspace_roots=", root_dir), "--label", "com.docker.lsp=true", "--label", "com.docker.lsp.extension=labs-make-runbook", core.str("docker/lsp:", (os.getenv("DOCKER_LSP_TAG") or "latest")), "listen", "--workspace", "/docker", "--root-dir", root_dir, "--profile", "all"}
+  return {"docker", "run", "--name", core.str("nvim", core.rand()), "--rm", "--init", "--interactive", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-lsp,target=/docker", "--mount", ("type=bind,source=" .. root_dir .. ",target=/project"), "--label", core.str("com.docker.lsp.workspace_roots=", root_dir), "--label", "com.docker.lsp=true", "--label", "com.docker.lsp.extension=labs-make-runbook", core.str("docker/lsp:", (os.getenv("DOCKER_LSP_TAG") or "latest")), "listen", "--workspace", "/docker", "--root-dir", root_dir, "--profile", "all"}
 end
 _2amodule_2a["docker-lsp-docker-runner"] = docker_lsp_docker_runner
 local docker_lsp_filetypes = {"dockerfile", "dockerignore", "dockercompose.yaml", "markdown", "datalog-edn", "shellscript"}

@@ -1,0 +1,18 @@
+repos:
+    - repo: http://github.com/pre-commit/pre-commit-hooks
+      rev: v2.3.0
+      hooks:
+          - id: check-yaml
+          - id: trailing-whitespace
+          - id: check-merge-conflict
+    - repo: https://github.com/jorisroovers/gitlint
+      rev: main
+      hooks:
+          - id: gitlint
+    - repo: local
+      hooks:
+          - id: markdownlint
+            name: markdown linter
+            entry: markdownlint/markdownlint
+            language: docker_image
+            files: "\\.md$"

@@ -31,7 +31,7 @@ local function prompt_runner(args, message_callback, functions_callback)
         return functions_callback(core.str(x))
       elseif ((_G.type(_3_) == "table") and ((_3_).method == "functions-done") and (nil ~= (_3_).params)) then
         local x = (_3_).params
-        return functions_callback(core.str(x))
+        return functions_callback(core.str("\n"))
       elseif ((_G.type(_3_) == "table") and (nil ~= (_3_).error) and (nil ~= (_3_).data)) then
         local err0 = (_3_).error
         local d = (_3_).data
@@ -66,21 +66,57 @@ end
 _2amodule_2a["prompt-runner"] = prompt_runner
 local function execute_prompt(type)
   local function _10_(messages_callback, functions_callback)
-    return prompt_runner({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "--mount", string.format("type=bind,source=%s,target=/project", vim.fn.getcwd()), "--mount", "type=bind,source=/Users/slim/.openai-api-key,target=/root/.openai-api-key", "vonwig/prompts:local", "run", "--jsonrpc", vim.fn.getcwd(), "jimclark106", "darwin", type}, messages_callback, functions_callback)
+    return prompt_runner({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "--mount", string.format("type=bind,source=%s,target=/project", vim.fn.getcwd()), "--mount", "type=bind,source=/Users/slim/.openai-api-key,target=/root/.openai-api-key", "vonwig/prompts:local", "run", "--jsonrpc", "--host-dir", vim.fn.getcwd(), "--user", "jimclark106", "--platform", "darwin", "--prompts", type}, messages_callback, functions_callback)
   end
   return util["start-streaming"](_10_)
 end
 _2amodule_2a["execute-prompt"] = execute_prompt
+local function basedir()
+  return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":h")
+end
+_2amodule_2a["basedir"] = basedir
+local hostdir = ""
+local function setHostdir()
+  hostdir = vim.fn.input("hostdir: ")
+  return nil
+end
+_2amodule_2a["setHostdir"] = setHostdir
+local function getHostdir()
+  return hostdir
+end
+_2amodule_2a["getHostdir"] = getHostdir
+--[[ (set-hostdir "lkalksjdf") (get-hostdir) (core.println hostdir) ]]
+local function execute_local_prompt_without_docker()
+  local dir = basedir()
+  local function _11_(messages_callback, functions_callback)
+    local args = {"bb", "-m", "prompts", "run", "--jsonrpc", "--host-dir", getHostdir(), "--user", "jimclark106", "--platform", "darwin", "--prompts-dir", dir, "--debug"}
+    core.println(args)
+    return prompt_runner(args, messages_callback, functions_callback)
+  end
+  return util["start-streaming"](_11_)
+end
+_2amodule_2a["execute-local-prompt-without-docker"] = execute_local_prompt_without_docker
 local function prompt_run()
-  local prompts = {"github:docker/labs-githooks?ref=main&path=prompts/git_hooks_just_llm", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_with_linguist", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks", "github:docker/labs-githooks?ref=slim/prompts/input&path=prompts/git_hooks_single_step"}
-  local function _11_(selected, _)
+  local prompts = {"github:docker/labs-githooks?ref=main&path=prompts/git_hooks_just_llm", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_with_linguist", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_single_step", "github:docker/labs-make-runbook?ref=main&path=prompts/dockerfiles"}
+  local function _12_(selected, _)
     return execute_prompt(selected)
   end
-  return vim.ui.select(prompts, {prompt = "Select LLM"}, _11_)
+  return vim.ui.select(prompts, {prompt = "Select LLM"}, _12_)
 end
 _2amodule_2a["prompt-run"] = prompt_run
+local function localPromptRun()
+  return execute_local_prompt_without_docker()
+end
+_2amodule_2a["localPromptRun"] = localPromptRun
+local function currentBuffer()
+  return core.println(core.str("bufname", vim.api.nvim_buf_get_name(0)))
+end
+_2amodule_2a["currentBuffer"] = currentBuffer
 local promptRun = prompt_run
 _2amodule_2a["promptRun"] = promptRun
 --[[ (prompt-run) ]]
 nvim.set_keymap("n", "<leader>assist", ":lua require('prompts.runner').promptRun()<CR>", {})
+nvim.set_keymap("n", "<leader>pr", ":lua require('prompts.runner').localPromptRun()<CR>", {})
+nvim.set_keymap("n", "<leader>shd", ":lua require('prompts.runner').setHostdir()<CR>", {})
+nvim.set_keymap("n", "<leader>cb", ":lua require('prompts.runner').currentBuffer()<CR>", {})
 return _2amodule_2a

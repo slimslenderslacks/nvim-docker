@@ -7,32 +7,34 @@
              keymaps keymaps
              sha2 sha2}})
 
-(defn get-client-by-name [s] 
-  (core.some 
+(defn get-client-by-name [s]
+  (core.some
     (fn [client] (when (= client.name s) client)) (vim.lsp.get_clients)))
 
 ;; jwt handler
 (defn jwt []
-  (let [p (vim.system 
-            ["docker-credential-desktop" "get"] 
+  (let [p (vim.system
+            ["docker-credential-desktop" "get"]
             {:text true :stdin "https://index.docker.io/v1//access-token"})
         obj (p:wait)]
     (if (= (. obj :code) 0)
       (. (vim.json.decode (. obj :stdout)) :Secret)
       {:code 400 :message "no docker-credential-desktop in PATH or " :data {:code (. obj :code)}})))
 
-(defn use-bash [s]
+(defn use-bash [pwd s]
   ;;(.. "bash --init-file <(echo '" s "')")
-  s)
+  (.. "cd " pwd " && " s))
 
-(defn run-in-terminal [s]
+(defn run-in-terminal [pwd s]
+  "pwd - absolute path of working directory to run script
+   s - the script to run"
   (let [current-win (nvim.tabpage_get_win 0)
         original-buf (nvim.win_get_buf current-win)
         term-buf (nvim.create_buf false true)]
     (vim.cmd "split")
     (let [new-win (nvim.tabpage_get_win 0)]
       (nvim.win_set_buf new-win term-buf)
-      (nvim.fn.termopen (use-bash s)))))
+      (nvim.fn.termopen (use-bash pwd s)))))
 
 (var commands {})
 
@@ -54,12 +56,19 @@
        (last-2)
        (str.join separator)))
 
+(defn uri-basedir [uri]
+  (nvim.fn.fnamemodify (vim.fn.substitute uri "file://" "" "") ":h"))
+
+(comment
+  (uri-basedir "file:///Users/slim"))
+
+;; TODO store both the script and basedir of the script so we can run the script in the pwd
 (defn block-map [m]
   (core.reduce
     (fn [agg [uri blocks]]
       (core.reduce
         (fn [m {:command command :script script}]
-          (core.assoc m (string.format "%-30s (%s)" command (last-n-segments uri "/")) script))
+          (core.assoc m (string.format "%-30s (%s)" command (last-n-segments uri "/")) {:basedir (uri-basedir uri) :script script}))
         agg
         blocks))
     {}
@@ -72,7 +81,7 @@
       {:prompt "Select a command:"}
       (fn [command _]
         (when command
-          (run-in-terminal (. blocks-in-scope command)))))))
+          (run-in-terminal (. blocks-in-scope command :basedir) (. blocks-in-scope command :script)))))))
 
 ; lsp $terminal/run request handler
 (defn terminal-run-handler [err result ctx config]
@@ -80,7 +89,7 @@
   (if err
     (core.println "terminal-run err: " err))
   (core.println "terminal-run" result)
-  (run-in-terminal (. result :content)))
+  (run-in-terminal (uri-basedir (. result :uri)) (. result :content)))
 
 (defn notify [channel data]
   (case (get-client-by-name "docker_lsp")
@@ -92,16 +101,16 @@
   ;; for request handlers, the result is the params
   ;; the ctx has the client_id and the method
   ;; the config is probably empty
-  (let [p (vim.system 
+  (let [p (vim.system
             (core.concat [(. result :executable)] (. result :args))
-            {:text true 
-             :stdin false 
+            {:text true
+             :stdin false
              :stdout (fn [err data]
                        (notify "$/docker/cli-helper" {:stdout data :id (. result :id)}))
              :stderr (fn [err data]
                        (notify "$/docker/cli-helper" {:stderr data :id (. result :id)}))}
             (fn [{:code code :signal signal &as data}]
-              (notify "$/docker/cli-helper" (-> {} 
+              (notify "$/docker/cli-helper" (-> {}
                                                 (core.merge (if code {:exit code}))
                                                 (core.merge (if signal {:signal signal}))
                                                 (core.assoc :id (. result :id))))))]
@@ -123,14 +132,15 @@
     ; TODO hack - how do we force redraw of current buffer?  edit buffer does it but ...
     r))
 
+;; re-registers docker:command blocks when a uri is updated
 ;; notification will be a map with two keys (:uri and :blocks)
-(defn terminal-registration-handler [err result ctx config] 
+(defn terminal-registration-handler [err result ctx config]
   (let [{:blocks blocks :uri uri} result]
-    (set commands 
-         (core.assoc commands uri 
+    (set commands
+         (core.assoc commands uri
                      (->> blocks
-                          (core.reduce 
-                            (fn [agg m] 
+                          (core.reduce
+                            (fn [agg m]
                               (core.assoc agg (. m :command) (. m :script))
                               {})))))))
 
@@ -140,7 +150,7 @@
 (defn jwt-handler [err result ctx config]
   "handler for lsps that need a jwt"
   (let [(ok? val-or-msg) (pcall jwt)]
-    (if ok? 
+    (if ok?
       val-or-msg
       {:code -32603 :message val-or-msg})))
 
@@ -190,7 +200,7 @@
   ["docker" "run"
    "--name" (core.str "nvim" (core.rand))
    "--rm" "--init" "--interactive"
-   "--pull" "always"
+   ;;"--pull" "always"
    "-v" "/var/run/docker.sock:/var/run/docker.sock"
    "--mount" "type=volume,source=docker-lsp,target=/docker"
    "--mount" (.. "type=bind,source=" root-dir ",target=/project")
@@ -214,7 +224,7 @@
 ;; vim.lsp.start attaches the current buffer
 (defn start [root-dir extra-handlers]
   (vim.lsp.start {:name "docker_lsp"
-                  :cmd (if 
+                  :cmd (if
                          (= "nix" (os.getenv "DOCKER_LSP"))
                          (docker-lsp-nix-runner root-dir)
                          (= "clj" (os.getenv "DOCKER_LSP"))
@@ -222,9 +232,9 @@
                          (docker-lsp-docker-runner root-dir))
                   :root_dir root-dir
                   :on_attach (or attach-callback keymaps.default-attach-callback)
-                  :settings 
+                  :settings
                   {:docker
-                   {:assistant 
+                   {:assistant
                     {:debug true}
                     :scout
                     {:language-gateway "https://api.scout-stage.docker.com/v1/language-gateway"}}}
@@ -237,12 +247,12 @@
 (defn attach-current-buffers []
   (let [bufs (vim.api.nvim_list_bufs)]
     (->> (core.vals bufs)
-         ;(core.filter 
+         ;(core.filter
            ;(fn [bufnr]
              ;(let [ft (. (. vim.bo bufnr) :filetype)]
                ;(core.println "check " bufnr ft)
                ;(core.some #(= ft $1) docker-lsp-filetypes))))
-         (core.map (fn [bufnr] 
+         (core.map (fn [bufnr]
                      (core.println "attach " bufnr)
                      (vim.lsp.buf_attach_client bufnr (. (get-client-by-name "docker_lsp") :id)))))))
 
@@ -257,7 +267,7 @@
    "docker/cli-helper" cli-helper-handler
    "workspace/inlayHint/refresh" inlay-hint-refresh-handler})
 
-;; once this module is required, the docker_lsp will 
+;; once this module is required, the docker_lsp will
 ;; be attached to these buffers whenever opened
 (vim.api.nvim_create_autocmd
   "FileType"
@@ -267,7 +277,7 @@
    :callback (fn [] (let [client (get-client-by-name "docker_lsp")]
                       (if client
                         (vim.lsp.buf_attach_client 0 client.id)
-                        (start 
+                        (start
                           (vim.fn.getcwd)
                           extra-handlers))
                       ;; don't delete the autocmd

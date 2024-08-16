@@ -9,7 +9,7 @@
 
 (defn open [lines]
   (let [buf (vim.api.nvim_create_buf false true)]
-    (nvim.buf_set_text buf 0 0 0 0 lines) 
+    (nvim.buf_set_text buf 0 0 0 0 lines)
     (util.open-win buf {:title "Copilot"})))
 
 (comment
@@ -23,11 +23,11 @@
 ;;; --------
 
 (defn ollama [system-prompt prompt cb]
-  (curl.post 
+  (curl.post
     "http://localhost:11434/api/generate"
-    {:body (vim.json.encode {:model "llama2"
+    {:body (vim.json.encode {:model "llama3.1"
                              :prompt prompt
-                             :system system-prompt 
+                             :system system-prompt
                              :stream true})
      :stream (fn [_ chunk _]
                (cb (. (vim.json.decode chunk) "response")))}))
@@ -42,22 +42,21 @@
 ;; ----------
 
 (defn copilot []
-  (let [prompts ["run base LLM"
-                 "run augmented LLM"]]
+  (let [prompts ["ask"
+                 "ask about snippet"]]
     (vim.ui.select
       prompts
       {:prompt "Select LLM"}
       (fn [selected _]
-        (let [prompt (..
-                       "I have a question about this: "
-                       (vim.fn.input "Question: ")       
-                       "\n\n Here is the code:\n```\n"
+          (if
+            (= selected "ask about snippet")
+            (execute-prompt
+                     (..
+                       "\n\n Here is a code snippet that I'm working on:\n```\n"
                        (str.join "\n" (util.get-current-buffer-selection))
-                       "\n```\n")]
-          (if 
-            (= selected "run base LLM")
-            (execute-prompt prompt) 
-            (execute-prompt prompt)))))))
+                       "\n```\n\n"
+                       (vim.fn.input "Ask Assistant: ")))
+            (execute-prompt (str.join "\n" (util.get-current-buffer-selection))))))))
 
 (nvim.set_keymap :v :<leader>ai ":lua require('nano-copilot').copilot()<CR>" {})
 
