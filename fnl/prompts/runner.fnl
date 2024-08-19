@@ -23,6 +23,7 @@
                              {:method "functions" :params x} (functions-callback (core.str x))
                              {:method "functions-done" :params x} (functions-callback (core.str "\n"))
                              {:error err :data d} (message-callback (core.str (string.format "%s\n%s" err d)))
+                             {:method "prompts" :params x} (message-callback "")
                              _ (message-callback (core.str "-->\n" data))))
                          (if data
                            (jsonrpc.messages data)
@@ -55,20 +56,20 @@
 (defn basedir []
   (vim.fn.fnamemodify (vim.api.nvim_buf_get_name 0) ":h"))
 
-(var hostdir "")
-(defn setHostdir []
-  (set hostdir (vim.fn.input "hostdir: ")))
+(var hostdir "/Users/slim/docker/labs-ai-tools-for-devs/")
+
 (defn getHostdir []
   hostdir)
 
 (comment
-  (set-hostdir "lkalksjdf")
   (get-hostdir)
   (core.println hostdir))
 
 (defn execute-local-prompt-without-docker []
   "execute the prompt runner and stream notifications to a vim buffer"
-  (let [dir (basedir)]
+  (let [f (vim.api.nvim_buf_get_name 0)]
+    (vim.cmd "split")
+    (vim.cmd "resize +10")
     (util.start-streaming
       (fn [messages-callback functions-callback]
         (let [args ["bb"
@@ -79,9 +80,8 @@
                     "--host-dir" (getHostdir)
                     "--user" "jimclark106"
                     "--platform" "darwin"
-                    "--prompts-dir" dir
+                    "--prompts-file" f
                     "--debug"]]
-          (core.println args)
           (prompt-runner args
                          messages-callback
                          functions-callback))))))
@@ -105,9 +105,6 @@
   "select a prompt git ref and execute the prompt"
   (execute-local-prompt-without-docker))
 
-(defn currentBuffer []
-  (core.println (core.str "bufname" (vim.api.nvim_buf_get_name 0))))
-
 (def promptRun prompt-run)
 
 (comment
@@ -115,6 +112,19 @@
 
 (nvim.set_keymap :n :<leader>assist ":lua require('prompts.runner').promptRun()<CR>" {})
 (nvim.set_keymap :n :<leader>pr ":lua require('prompts.runner').localPromptRun()<CR>" {})
-(nvim.set_keymap :n :<leader>shd ":lua require('prompts.runner').setHostdir()<CR>" {})
-(nvim.set_keymap :n :<leader>cb ":lua require('prompts.runner').currentBuffer()<CR>" {})
+
+(nvim.create_user_command
+  "PromptsSetHostdir"
+  (fn [{:args args}]
+    (set hostdir args))
+  {:desc "set prompts hostdir"
+   :nargs 1
+   :complete "dir"})
+
+(nvim.create_user_command
+  "PromptsGetHostdir"
+  (fn [_]
+    (core.println (core.str "HostDir: " (getHostdir))))
+  {:desc "get prompts hostdir"
+   :nargs 0})
 

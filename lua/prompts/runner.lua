@@ -36,6 +36,9 @@ local function prompt_runner(args, message_callback, functions_callback)
         local err0 = (_3_).error
         local d = (_3_).data
         return message_callback(core.str(string.format("%s\n%s", err0, d)))
+      elseif ((_G.type(_3_) == "table") and ((_3_).method == "prompts") and (nil ~= (_3_).params)) then
+        local x = (_3_).params
+        return message_callback("")
       elseif true then
         local _ = _3_
         return message_callback(core.str("-->\n", data))
@@ -75,22 +78,18 @@ local function basedir()
   return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":h")
 end
 _2amodule_2a["basedir"] = basedir
-local hostdir = ""
-local function setHostdir()
-  hostdir = vim.fn.input("hostdir: ")
-  return nil
-end
-_2amodule_2a["setHostdir"] = setHostdir
+local hostdir = "/Users/slim/docker/labs-ai-tools-for-devs/"
 local function getHostdir()
   return hostdir
 end
 _2amodule_2a["getHostdir"] = getHostdir
---[[ (set-hostdir "lkalksjdf") (get-hostdir) (core.println hostdir) ]]
+--[[ (get-hostdir) (core.println hostdir) ]]
 local function execute_local_prompt_without_docker()
-  local dir = basedir()
+  local f = vim.api.nvim_buf_get_name(0)
+  vim.cmd("split")
+  vim.cmd("resize +10")
   local function _11_(messages_callback, functions_callback)
-    local args = {"bb", "-m", "prompts", "run", "--jsonrpc", "--host-dir", getHostdir(), "--user", "jimclark106", "--platform", "darwin", "--prompts-dir", dir, "--debug"}
-    core.println(args)
+    local args = {"bb", "-m", "prompts", "run", "--jsonrpc", "--host-dir", getHostdir(), "--user", "jimclark106", "--platform", "darwin", "--prompts-file", f, "--debug"}
     return prompt_runner(args, messages_callback, functions_callback)
   end
   return util["start-streaming"](_11_)
@@ -108,15 +107,20 @@ local function localPromptRun()
   return execute_local_prompt_without_docker()
 end
 _2amodule_2a["localPromptRun"] = localPromptRun
-local function currentBuffer()
-  return core.println(core.str("bufname", vim.api.nvim_buf_get_name(0)))
-end
-_2amodule_2a["currentBuffer"] = currentBuffer
 local promptRun = prompt_run
 _2amodule_2a["promptRun"] = promptRun
 --[[ (prompt-run) ]]
 nvim.set_keymap("n", "<leader>assist", ":lua require('prompts.runner').promptRun()<CR>", {})
 nvim.set_keymap("n", "<leader>pr", ":lua require('prompts.runner').localPromptRun()<CR>", {})
-nvim.set_keymap("n", "<leader>shd", ":lua require('prompts.runner').setHostdir()<CR>", {})
-nvim.set_keymap("n", "<leader>cb", ":lua require('prompts.runner').currentBuffer()<CR>", {})
+local function _15_(_13_)
+  local _arg_14_ = _13_
+  local args = _arg_14_["args"]
+  hostdir = args
+  return nil
+end
+nvim.create_user_command("PromptsSetHostdir", _15_, {desc = "set prompts hostdir", nargs = 1, complete = "dir"})
+local function _16_(_)
+  return core.println(core.str("HostDir: ", getHostdir()))
+end
+nvim.create_user_command("PromptsGetHostdir", _16_, {desc = "get prompts hostdir", nargs = 0})
 return _2amodule_2a

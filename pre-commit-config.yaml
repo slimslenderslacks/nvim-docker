@@ -11,8 +11,8 @@ repos:
           - id: gitlint
     - repo: local
       hooks:
-          - id: markdownlint
-            name: markdown linter
-            entry: markdownlint/markdownlint
-            language: docker_image
-            files: "\\.md$"
+      - id: markdownlint
+        name: markdown linter
+        entry: markdownlint/markdownlint
+        language: docker_image
+        files: "\\.md$"
