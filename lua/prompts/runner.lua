@@ -19,13 +19,20 @@ _2amodule_locals_2a["jsonrpc"] = jsonrpc
 _2amodule_locals_2a["nvim"] = nvim
 _2amodule_locals_2a["str"] = str
 _2amodule_locals_2a["util"] = util
+local debug = false
 local function prompt_runner(args, message_callback, functions_callback)
   local function _1_(err, data)
     local function _2_(m)
       local _3_ = m
       if ((_G.type(_3_) == "table") and ((_3_).method == "message") and (nil ~= (_3_).params)) then
         local x = (_3_).params
-        return message_callback(core.get(x, "content"))
+        if core.get(x, "content") then
+          return message_callback(core.get(x, "content"))
+        elseif debug then
+          return message_callback(core.get(x, "debug"))
+        else
+          return message_callback(core.get(x, "content"))
+        end
       elseif ((_G.type(_3_) == "table") and ((_3_).method == "functions") and (nil ~= (_3_).params)) then
         local x = (_3_).params
         return functions_callback(core.str(x))
@@ -46,39 +53,39 @@ local function prompt_runner(args, message_callback, functions_callback)
         return nil
       end
     end
-    local function _5_()
+    local function _6_()
       if data then
         return jsonrpc.messages(data)
       else
         return {}
       end
     end
-    return core.map(_2_, _5_())
+    return core.map(_2_, _6_())
   end
-  local function _6_(err, data)
+  local function _7_(err, data)
     return message_callback(data)
   end
-  local function _9_(_7_)
-    local _arg_8_ = _7_
-    local code = _arg_8_["code"]
-    local signal = _arg_8_["signal"]
-    local data = _arg_8_
+  local function _10_(_8_)
+    local _arg_9_ = _8_
+    local code = _arg_9_["code"]
+    local signal = _arg_9_["signal"]
+    local data = _arg_9_
   end
-  return vim.system(args, {text = true, stdout = _1_, stderr = _6_, stdin = false}, _9_)
+  return vim.system(args, {text = true, cwd = "/Users/slim/docker/labs-ai-tools-for-devs/", stdout = _1_, stderr = _7_, stdin = false}, _10_)
 end
 _2amodule_2a["prompt-runner"] = prompt_runner
 local function execute_prompt(type)
-  local function _10_(messages_callback, functions_callback)
+  local function _11_(messages_callback, functions_callback)
     return prompt_runner({"docker", "run", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "--mount", "type=volume,source=docker-prompts,target=/prompts", "--mount", string.format("type=bind,source=%s,target=/project", vim.fn.getcwd()), "--mount", "type=bind,source=/Users/slim/.openai-api-key,target=/root/.openai-api-key", "vonwig/prompts:local", "run", "--jsonrpc", "--host-dir", vim.fn.getcwd(), "--user", "jimclark106", "--platform", "darwin", "--prompts", type}, messages_callback, functions_callback)
   end
-  return util["start-streaming"](_10_)
+  return util["start-streaming"](_11_)
 end
 _2amodule_2a["execute-prompt"] = execute_prompt
 local function basedir()
   return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":h")
 end
 _2amodule_2a["basedir"] = basedir
-local hostdir = "/Users/slim/docker/labs-ai-tools-for-devs/"
+local hostdir = "/Users/slim/docker/labs-make-runbook/"
 local function getHostdir()
   return hostdir
 end
@@ -88,19 +95,27 @@ local function execute_local_prompt_without_docker()
   local f = vim.api.nvim_buf_get_name(0)
   vim.cmd("split")
   vim.cmd("resize +10")
-  local function _11_(messages_callback, functions_callback)
-    local args = {"bb", "-m", "prompts", "run", "--jsonrpc", "--host-dir", getHostdir(), "--user", "jimclark106", "--platform", "darwin", "--prompts-file", f, "--debug"}
+  local function _12_(messages_callback, functions_callback)
+    local args
+    local function _13_()
+      if debug then
+        return {"--debug"}
+      else
+        return {}
+      end
+    end
+    args = core.concat({"bb", "-m", "prompts", "run", "--jsonrpc", "--host-dir", getHostdir(), "--user", "jimclark106", "--platform", "darwin", "--prompts-file", f}, _13_())
     return prompt_runner(args, messages_callback, functions_callback)
   end
-  return util["start-streaming"](_11_)
+  return util["start-streaming"](_12_)
 end
 _2amodule_2a["execute-local-prompt-without-docker"] = execute_local_prompt_without_docker
 local function prompt_run()
   local prompts = {"github:docker/labs-githooks?ref=main&path=prompts/git_hooks_just_llm", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_with_linguist", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks", "github:docker/labs-githooks?ref=main&path=prompts/git_hooks_single_step", "github:docker/labs-make-runbook?ref=main&path=prompts/dockerfiles"}
-  local function _12_(selected, _)
+  local function _14_(selected, _)
     return execute_prompt(selected)
   end
-  return vim.ui.select(prompts, {prompt = "Select LLM"}, _12_)
+  return vim.ui.select(prompts, {prompt = "Select LLM"}, _14_)
 end
 _2amodule_2a["prompt-run"] = prompt_run
 local function localPromptRun()
@@ -112,15 +127,20 @@ _2amodule_2a["promptRun"] = promptRun
 --[[ (prompt-run) ]]
 nvim.set_keymap("n", "<leader>assist", ":lua require('prompts.runner').promptRun()<CR>", {})
 nvim.set_keymap("n", "<leader>pr", ":lua require('prompts.runner').localPromptRun()<CR>", {})
-local function _15_(_13_)
-  local _arg_14_ = _13_
-  local args = _arg_14_["args"]
+local function _17_(_15_)
+  local _arg_16_ = _15_
+  local args = _arg_16_["args"]
   hostdir = args
   return nil
 end
-nvim.create_user_command("PromptsSetHostdir", _15_, {desc = "set prompts hostdir", nargs = 1, complete = "dir"})
-local function _16_(_)
+nvim.create_user_command("PromptsSetHostdir", _17_, {desc = "set prompts hostdir", nargs = 1, complete = "dir"})
+local function _18_(_)
+  debug = not debug
+  return core.println(core.str("debug ", debug))
+end
+nvim.create_user_command("PromptsToggleDebug", _18_, {desc = "toggle prompts debug", nargs = 0})
+local function _19_(_)
   return core.println(core.str("HostDir: ", getHostdir()))
 end
-nvim.create_user_command("PromptsGetHostdir", _16_, {desc = "get prompts hostdir", nargs = 0})
+nvim.create_user_command("PromptsGetHostdir", _19_, {desc = "get prompts hostdir", nargs = 0})
 return _2amodule_2a

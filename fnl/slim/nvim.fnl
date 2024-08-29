@@ -11,7 +11,7 @@
 (defn update-buf [buf lines]
   (vim.api.nvim_buf_call
     buf
-    (fn [] 
+    (fn []
       (vim.cmd "norm! G")
       (vim.api.nvim_put lines "" true true))))
 
@@ -25,14 +25,14 @@
         [_ s2 e2 _] (nvim.fn.getpos "'>")]
     (nvim.buf_get_text (nvim.buf.nr) (- s1 1) (- e1 1) (- s2 1) (- e2 1) {})))
 
-(def win-opts 
-  {:relative "editor" 
-   :row 3 
-   :col 3 
-   :width 80 
+(def win-opts
+  {:relative "editor"
+   :row 3
+   :col 3
+   :width 80
    :height 35
    :style "minimal"
-   :border "rounded" 
+   :border "rounded"
    :title "my title"
    :title_pos "center"})
 
@@ -49,23 +49,23 @@
   (let [characters ["⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏"]
         format "> Generating %s"
         t (vim.loop.new_timer)]
-    (t:start 100 100 (vim.schedule_wrap 
-                       (fn [] 
+    (t:start 100 100 (vim.schedule_wrap
+                       (fn []
                          (let [lines [(format:format (core.get characters current-char))]]
                            (nvim.buf_set_lines buf n (+ n 1) false lines)
                            (set current-char (+ (% current-char (core.count characters)) 1))))))
     t))
 
 (defn uuid []
-  (let [p (vim.system 
-            ["uuidgen"] 
+  (let [p (vim.system
+            ["uuidgen"]
             {:text true})
         obj (p:wait)]
     (str.trim (. obj :stdout))))
 
 (defn open [lines]
   (let [buf (vim.api.nvim_create_buf false true)]
-    (nvim.buf_set_text buf 0 0 0 0 lines) 
+    (nvim.buf_set_text buf 0 0 0 0 lines)
     [(open-win buf {:title "Copilot"}) buf]))
 
 (defn open-new-buffer [s]
@@ -87,24 +87,25 @@
     (let [t (show-spinner buf 1) ]
       (nvim.buf_set_lines buf -1 -1 false ["" ""])
       (stream-generator
-        (fn [s] 
-          (vim.schedule 
-            (fn [] 
-              (t:stop) 
-              (set tokens (core.concat tokens [s])) 
+        ;; messages callback
+        (fn [s]
+          (vim.schedule
+            (fn []
+              (t:stop)
+              (set tokens (core.concat tokens [s]))
               ;; reset everything
               (vim.api.nvim_buf_set_lines buf 1 -1 false (str.split (str.join tokens) "\n"))
               (set append true))))
-        (fn [s] 
+        (fn [s]
           ;; TODO work differently for messages versus functions
           ;; functions update the last token
           ;; messages are appended
-          (vim.schedule 
-            (fn [] 
+          (vim.schedule
+            (fn []
               (t:stop)
               (if append
                 (set tokens (core.concat tokens [s]))
-                (set tokens (core.concat (core.butlast tokens) [s]))) 
+                (set tokens (core.concat (core.butlast tokens) [s])))
               ;; reset everything
               (vim.api.nvim_buf_set_lines buf 1 -1 false (str.split (str.join tokens) "\n"))
               (set append false))))))))
@@ -117,11 +118,11 @@
       (nvim.buf_set_lines buf -1 -1 false ["" ""])
       (stream-generator
         prompt
-        (fn [s] 
-          (vim.schedule 
-            (fn [] 
-              (t:stop) 
-              (set tokens (core.concat tokens [s])) 
+        (fn [s]
+          (vim.schedule
+            (fn []
+              (t:stop)
+              (set tokens (core.concat tokens [s]))
               (vim.api.nvim_buf_set_lines buf (core.inc (core.count lines)) -1 false (str.split (str.join tokens) "\n")))))))))
 
 (defn stream-into-empty-buffer [stream-generator prompt buffer-name]
@@ -130,13 +131,13 @@
     (nvim.buf_set_lines buf -1 -1 false ["" ""])
     (stream-generator
        prompt
-       (fn [s] 
-         (set tokens (core.concat tokens [s])) 
+       (fn [s]
+         (set tokens (core.concat tokens [s]))
          (let [lines (str.split (str.join tokens) "\n")]
            (vim.schedule
-             (fn [] 
-               (vim.api.nvim_buf_set_lines 
-                   buf 
+             (fn []
+               (vim.api.nvim_buf_set_lines
+                   buf
                    0 -1 false lines))))))))
 
 (defn open-file [path]

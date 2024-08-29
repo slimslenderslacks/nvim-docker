@@ -7,6 +7,8 @@
              util slim.nvim
              jsonrpc jsonrpc}})
 
+(var debug false)
+
 (defn prompt-runner
   [args message-callback functions-callback]
   "Run the prompt runner docker container with the given args.
@@ -15,11 +17,16 @@
   (vim.system
     args
     {:text true
+     :cwd "/Users/slim/docker/labs-ai-tools-for-devs/"
      :stdin false
      :stdout (fn [err data]
                (core.map (fn [m]
                            (case m
-                             {:method "message" :params x} (message-callback (core.get x "content"))
+                             {:method "message" :params x} (if (core.get x "content")
+                                                             (message-callback (core.get x "content"))
+                                                             debug
+                                                             (message-callback (core.get x "debug"))
+                                                             (message-callback (core.get x "content")))
                              {:method "functions" :params x} (functions-callback (core.str x))
                              {:method "functions-done" :params x} (functions-callback (core.str "\n"))
                              {:error err :data d} (message-callback (core.str (string.format "%s\n%s" err d)))
@@ -56,7 +63,7 @@
 (defn basedir []
   (vim.fn.fnamemodify (vim.api.nvim_buf_get_name 0) ":h"))
 
-(var hostdir "/Users/slim/docker/labs-ai-tools-for-devs/")
+(var hostdir "/Users/slim/docker/labs-make-runbook/")
 
 (defn getHostdir []
   hostdir)
@@ -72,16 +79,17 @@
     (vim.cmd "resize +10")
     (util.start-streaming
       (fn [messages-callback functions-callback]
-        (let [args ["bb"
-                    "-m"
-                    "prompts"
-                    "run"
-                    "--jsonrpc"
-                    "--host-dir" (getHostdir)
-                    "--user" "jimclark106"
-                    "--platform" "darwin"
-                    "--prompts-file" f
-                    "--debug"]]
+        (let [args (core.concat
+                     ["bb"
+                      "-m"
+                      "prompts"
+                      "run"
+                      "--jsonrpc"
+                      "--host-dir" (getHostdir)
+                      "--user" "jimclark106"
+                      "--platform" "darwin"
+                      "--prompts-file" f]
+                     (if debug ["--debug"] []))]
           (prompt-runner args
                          messages-callback
                          functions-callback))))))
@@ -120,6 +128,14 @@
   {:desc "set prompts hostdir"
    :nargs 1
    :complete "dir"})
+
+(nvim.create_user_command
+  "PromptsToggleDebug"
+  (fn [_]
+    (set debug (not debug))
+    (core.println (core.str "debug " debug)))
+  {:desc "toggle prompts debug"
+   :nargs 0})
 
 (nvim.create_user_command
   "PromptsGetHostdir"
