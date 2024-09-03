@@ -10,7 +10,7 @@
 (defn open [lines]
   (let [buf (vim.api.nvim_create_buf false true)]
     (nvim.buf_set_text buf 0 0 0 0 lines)
-    (util.open-win buf {:title "Copilot"})))
+    (util.open-win buf {})))
 
 (comment
   (open ["hey"]))

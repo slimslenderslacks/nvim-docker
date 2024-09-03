@@ -46,10 +46,10 @@ local function get_current_buffer_selection()
   return nvim.buf_get_text(nvim.buf.nr(), (s1 - 1), (e1 - 1), (s2 - 1), (e2 - 1), {})
 end
 _2amodule_2a["get-current-buffer-selection"] = get_current_buffer_selection
-local win_opts = {relative = "editor", row = 3, col = 3, width = 80, height = 35, style = "minimal", border = "rounded", title = "my title", title_pos = "center"}
-_2amodule_2a["win-opts"] = win_opts
+local floating_win_opts = {relative = "editor", row = 3, col = 3, width = 80, height = 35, style = "minimal", border = "rounded", title = "my title", title_pos = "center"}
+_2amodule_2a["floating-win-opts"] = floating_win_opts
 local function open_win(buf, opts)
-  local win = nvim.open_win(buf, true, core.merge(win_opts, opts))
+  local win = nvim.open_win(buf, true, core.merge({win = 0, split = "below"}, opts))
   nvim.set_option_value("filetype", "markdown", {buf = buf})
   nvim.set_option_value("buftype", "nofile", {buf = buf})
   nvim.set_option_value("wrap", true, {win = win})
@@ -81,7 +81,7 @@ _2amodule_2a["uuid"] = uuid
 local function open(lines)
   local buf = vim.api.nvim_create_buf(false, true)
   nvim.buf_set_text(buf, 0, 0, 0, 0, lines)
-  return {open_win(buf, {title = "Copilot"}), buf}
+  return {open_win(buf, {}), buf}
 end
 _2amodule_2a["open"] = open
 local function open_new_buffer(s)

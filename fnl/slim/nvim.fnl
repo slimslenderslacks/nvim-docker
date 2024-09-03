@@ -25,7 +25,7 @@
         [_ s2 e2 _] (nvim.fn.getpos "'>")]
     (nvim.buf_get_text (nvim.buf.nr) (- s1 1) (- e1 1) (- s2 1) (- e2 1) {})))
 
-(def win-opts
+(def floating-win-opts
   {:relative "editor"
    :row 3
    :col 3
@@ -37,7 +37,8 @@
    :title_pos "center"})
 
 (defn open-win [buf opts]
-  (let [win (nvim.open_win buf true (core.merge win-opts opts))]
+  ;; merge in floating-in-opts using core.merge to make this if we want a floating window
+  (let [win (nvim.open_win buf true (core.merge {:win 0 :split "below"} opts))]
     (nvim.set_option_value "filetype" "markdown" {:buf buf})
     (nvim.set_option_value "buftype" "nofile" {:buf buf})
     (nvim.set_option_value "wrap" true {:win win})
@@ -66,7 +67,7 @@
 (defn open [lines]
   (let [buf (vim.api.nvim_create_buf false true)]
     (nvim.buf_set_text buf 0 0 0 0 lines)
-    [(open-win buf {:title "Copilot"}) buf]))
+    [(open-win buf {}) buf]))
 
 (defn open-new-buffer [s]
   (let [buf (vim.api.nvim_create_buf true false)]

@@ -22,7 +22,7 @@ _2amodule_locals_2a["job"] = job
 local function open(lines)
   local buf = vim.api.nvim_create_buf(false, true)
   nvim.buf_set_text(buf, 0, 0, 0, 0, lines)
-  return util["open-win"](buf, {title = "Copilot"})
+  return util["open-win"](buf, {})
 end
 _2amodule_2a["open"] = open
 --[[ (open ["hey"]) ]]
