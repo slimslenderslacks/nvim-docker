@@ -81,7 +81,16 @@
 (comment
   (open-new-buffer "runbook-docker.md"))
 
+;; have a global flag for whether we're following the "chat" buffer
+(var follow? true)
+
+(defn toggleFollow []
+  (set follow? (not follow?)))
+
+(nvim.set_keymap :n :<leader>pt ":lua require('slim.nvim').toggleFollow()<CR>" {})
+
 (defn start-streaming [stream-generator]
+  "starts a stream of messages into a new buffer"
   (var tokens [])
   (var append true)
   (let [buf (open-new-buffer "chat")]
@@ -96,7 +105,10 @@
               (set tokens (core.concat tokens [s]))
               ;; reset everything
               (vim.api.nvim_buf_set_lines buf 1 -1 false (str.split (str.join tokens) "\n"))
+              (when follow?
+                (vim.cmd ":$"))
               (set append true))))
+        ;; functions callback - not appending - updating a json doc
         (fn [s]
           ;; TODO work differently for messages versus functions
           ;; functions update the last token
@@ -109,6 +121,8 @@
                 (set tokens (core.concat (core.butlast tokens) [s])))
               ;; reset everything
               (vim.api.nvim_buf_set_lines buf 1 -1 false (str.split (str.join tokens) "\n"))
+              (when follow?
+                (vim.cmd ":$"))
               (set append false))))))))
 
 (defn stream-into-buffer [stream-generator prompt]

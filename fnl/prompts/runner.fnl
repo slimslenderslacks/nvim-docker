@@ -29,7 +29,7 @@
                                                              (message-callback (core.get x "content")))
                              {:method "functions" :params x} (functions-callback (core.str x))
                              {:method "functions-done" :params x} (functions-callback (core.str "\n"))
-                             {:error err :data d} (message-callback (core.str (string.format "%s\n%s" err d)))
+                             {:error err :data d} (message-callback (core.str (string.format "\nerr--> %s\n%s" err d)))
                              {:method "prompts" :params x} (message-callback "")
                              _ (message-callback (core.str "-->\n" data))))
                          (if data
@@ -88,6 +88,7 @@
                       "--host-dir" (getHostdir)
                       "--user" "jimclark106"
                       "--platform" "darwin"
+                      "--thread-id" "thread"
                       "--prompts-file" f]
                      (if debug ["--debug"] []))]
           (prompt-runner args

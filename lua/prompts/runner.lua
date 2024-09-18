@@ -42,7 +42,7 @@ local function prompt_runner(args, message_callback, functions_callback)
       elseif ((_G.type(_3_) == "table") and (nil ~= (_3_).error) and (nil ~= (_3_).data)) then
         local err0 = (_3_).error
         local d = (_3_).data
-        return message_callback(core.str(string.format("%s\n%s", err0, d)))
+        return message_callback(core.str(string.format("\nerr--> %s\n%s", err0, d)))
       elseif ((_G.type(_3_) == "table") and ((_3_).method == "prompts") and (nil ~= (_3_).params)) then
         local x = (_3_).params
         return message_callback("")
@@ -104,7 +104,7 @@ local function execute_local_prompt_without_docker()
         return {}
       end
     end
-    args = core.concat({"bb", "-m", "prompts", "run", "--jsonrpc", "--host-dir", getHostdir(), "--user", "jimclark106", "--platform", "darwin", "--prompts-file", f}, _13_())
+    args = core.concat({"bb", "-m", "prompts", "run", "--jsonrpc", "--host-dir", getHostdir(), "--user", "jimclark106", "--platform", "darwin", "--thread-id", "thread", "--prompts-file", f}, _13_())
     return prompt_runner(args, messages_callback, functions_callback)
   end
   return util["start-streaming"](_12_)
