@@ -35,7 +35,7 @@ local function parse_message(s)
               return obj
             elseif ((_12_ == false) and (nil ~= _13_)) then
               local err = _13_
-              return {error = string.format("parse-message(%s)", err), data = s}
+              return {error = string.format("parse-message(%s) - %d", err, string.len(s)), data = s}
             elseif true then
               local _0 = _12_
               return {error = "parse-message(unknown)", data = s}
@@ -49,7 +49,7 @@ local function parse_message(s)
           return _11_(pcall(_15_))
         elseif ((_9_ == false) and (nil ~= _10_)) then
           local err = _10_
-          return {error = string.format("parse-message(%s)", err), data = s}
+          return {error = string.format("parse-message(%s) - %d", err, string.len(s)), data = s}
         elseif true then
           local _0 = _9_
           return {error = "parse-message(unknown)", data = s}
@@ -60,7 +60,7 @@ local function parse_message(s)
       return _8_(string.sub(json, 1, tonumber(content_length)))
     elseif ((_2_ == false) and (nil ~= _3_)) then
       local err = _3_
-      return {error = string.format("parse-message(%s)", err), data = s}
+      return {error = string.format("parse-message(%s) - %d", err, string.len(s)), data = s}
     elseif true then
       local _ = _2_
       return {error = "parse-message(unknown)", data = s}

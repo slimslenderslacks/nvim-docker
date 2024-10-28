@@ -13,7 +13,7 @@
             json-string (pcall (fn [] (vim.json.decode json-string)))
             (true obj) obj
             (catch
-              (false err) {:error (string.format "parse-message(%s)" err) :data s}
+              (false err) {:error (string.format "parse-message(%s) - %d" err (string.len s)) :data s}
               _ {:error "parse-message(unknown)" :data s})))
 
 (defn message-splitter [agg s n]
@@ -36,6 +36,8 @@
                 (set index (core.inc index))
                 (string.sub s start))))))
 
+;; TODO the data length can be too short to fit a long Content-Length (eg 8168 when the content-length was 14363)
+;; this causes us to show an error on the client side
 (defn messages [data]
   "args
      data - string message arriving jsonrpc server

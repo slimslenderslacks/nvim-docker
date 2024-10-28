@@ -92,6 +92,7 @@ local function open_new_buffer(s)
   end
   pcall(_5_)
   vim.api.nvim_command("set filetype=markdown")
+  vim.api.nvim_command("set nowrap")
   return buf
 end
 _2amodule_2a["open-new-buffer"] = open_new_buffer

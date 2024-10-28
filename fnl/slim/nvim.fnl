@@ -69,6 +69,7 @@
     (nvim.buf_set_text buf 0 0 0 0 lines)
     [(open-win buf {}) buf]))
 
+;; this is how we're building chat buffers
 (defn open-new-buffer [s]
   (let [buf (vim.api.nvim_create_buf true false)]
     (vim.api.nvim_win_set_buf 0 buf)
@@ -76,6 +77,7 @@
     ;; that the buffer has the right name
     (pcall (fn [] (vim.api.nvim_buf_set_name buf s)))
     (vim.api.nvim_command "set filetype=markdown")
+    (vim.api.nvim_command "set nowrap")
     buf))
 
 (comment
