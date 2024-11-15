@@ -11,6 +11,7 @@
 (var debug false)
 (var use-docker false)
 (var hostdir nil)
+(var prompt-engine nil)
 
 (defn update-buffer [m message-callback functions-callback]
   (case m
@@ -38,7 +39,7 @@
     {:error err :data d} (message-callback
                            (core.str (string.format "\nerr--> %s\n%s" err d)))
 
-    _ (message-callback (core.str "-->\n" data))))
+    _ (message-callback (core.str "-->\n" ""))))
 
 (defn prompt-runner
   [args message-callback functions-callback]
@@ -46,14 +47,16 @@
    assume stdout will have blocks of json-rpc notifications
    which could be either stream responses or streaming function calls"
   ;; look at passing :text true to convert /r/n to /n
-  (rpc.start
-    args
-    {:notification (fn [method params]
-                     (update-buffer
-                       {:method method :params params}
-                       message-callback
-                       functions-callback))}
-    {:cwd "/Users/slim/docker/labs-ai-tools-for-devs/"}))
+  (set
+    prompt-engine
+    (rpc.start
+      args
+      {:notification (fn [method params]
+                       (update-buffer
+                         {:method method :params params}
+                         message-callback
+                         functions-callback))}
+      {:cwd "/Users/slim/docker/labs-ai-tools-for-devs/"})))
 
 (defn basedir []
   (vim.fn.fnamemodify (vim.api.nvim_buf_get_name 0) ":h"))
@@ -179,7 +182,7 @@
 (nvim.create_user_command
   "PromptsSetHostdir"
   (fn [{:args args}]
-    (set hostdir args))
+    (set hostdir (vim.fn.fnamemodify args ":p")))
   {:desc "set prompts hostdir"
    :nargs 1
    :complete "dir"})
@@ -208,5 +211,12 @@
                                  debug
                                  use-docker)))
   {:desc "get prompts hostdir"
+   :nargs 0})
+
+(nvim.create_user_command
+  "PromptsExitEngine"
+  (fn [_]
+    (prompt-engine:terminate))
+  {:desc "exit a prompt engine"
    :nargs 0})
 

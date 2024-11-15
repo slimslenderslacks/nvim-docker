@@ -23,6 +23,7 @@ _2amodule_locals_2a["util"] = util
 local debug = false
 local use_docker = false
 local hostdir = nil
+local prompt_engine = nil
 local function update_buffer(m, message_callback, functions_callback)
   local _1_ = m
   if ((_G.type(_1_) == "table") and ((_1_).method == "start") and (nil ~= (_1_).params)) then
@@ -76,7 +77,7 @@ local function update_buffer(m, message_callback, functions_callback)
     return message_callback(core.str(string.format("\nerr--> %s\n%s", err, d)))
   elseif true then
     local _ = _1_
-    return message_callback(core.str("-->\n", data))
+    return message_callback(core.str("-->\n", ""))
   else
     return nil
   end
@@ -86,7 +87,8 @@ local function prompt_runner(args, message_callback, functions_callback)
   local function _8_(method, params)
     return update_buffer({method = method, params = params}, message_callback, functions_callback)
   end
-  return rpc.start(args, {notification = _8_}, {cwd = "/Users/slim/docker/labs-ai-tools-for-devs/"})
+  prompt_engine = rpc.start(args, {notification = _8_}, {cwd = "/Users/slim/docker/labs-ai-tools-for-devs/"})
+  return nil
 end
 _2amodule_2a["prompt-runner"] = prompt_runner
 local function basedir()
@@ -195,7 +197,7 @@ nvim.set_keymap("n", "<leader>pl", ":lua require('prompts.runner').localPromptLi
 local function _20_(_18_)
   local _arg_19_ = _18_
   local args = _arg_19_["args"]
-  hostdir = args
+  hostdir = vim.fn.fnamemodify(args, ":p")
   return nil
 end
 nvim.create_user_command("PromptsSetHostdir", _20_, {desc = "set prompts hostdir", nargs = 1, complete = "dir"})
@@ -213,4 +215,8 @@ local function _23_(_)
   return core.println(string.format("HostDir: %s\nDebug: %s\nUseDocker: %s\n", getHostdir(), debug, use_docker))
 end
 nvim.create_user_command("PromptsGetConfigr", _23_, {desc = "get prompts hostdir", nargs = 0})
+local function _24_(_)
+  return prompt_engine:terminate()
+end
+nvim.create_user_command("PromptsExitEngine", _24_, {desc = "exit a prompt engine", nargs = 0})
 return _2amodule_2a

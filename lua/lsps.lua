@@ -19,15 +19,13 @@ _2amodule_locals_2a["keymaps"] = keymaps
 _2amodule_locals_2a["nvim"] = nvim
 _2amodule_locals_2a["sha2"] = sha2
 _2amodule_locals_2a["str"] = str
+local lsp_client_id = nil
 local function get_client_by_name(s)
-  local function _1_(client)
-    if (client.name == s) then
-      return client
-    else
-      return nil
-    end
+  if lsp_client_id then
+    return vim.lsp.get_client_by_id(lsp_client_id)
+  else
+    return nil
   end
-  return core.some(_1_, vim.lsp.get_clients())
 end
 _2amodule_2a["get-client-by-name"] = get_client_by_name
 local function jwt()
@@ -92,31 +90,31 @@ end
 _2amodule_2a["uri-basedir"] = uri_basedir
 --[[ (uri-basedir "file:///Users/slim") ]]
 local function block_map(m)
-  local function _8_(agg, _6_)
-    local _arg_7_ = _6_
-    local uri = _arg_7_[1]
-    local blocks = _arg_7_[2]
-    local function _11_(m0, _9_)
-      local _arg_10_ = _9_
-      local command = _arg_10_["command"]
-      local script = _arg_10_["script"]
+  local function _7_(agg, _5_)
+    local _arg_6_ = _5_
+    local uri = _arg_6_[1]
+    local blocks = _arg_6_[2]
+    local function _10_(m0, _8_)
+      local _arg_9_ = _8_
+      local command = _arg_9_["command"]
+      local script = _arg_9_["script"]
       return core.assoc(m0, string.format("%-30s (%s)", command, last_n_segments(uri, "/")), {basedir = uri_basedir(uri), script = script})
     end
-    return core.reduce(_11_, agg, blocks)
+    return core.reduce(_10_, agg, blocks)
   end
-  return core.reduce(_8_, {}, core["kv-pairs"](m))
+  return core.reduce(_7_, {}, core["kv-pairs"](m))
 end
 _2amodule_2a["block-map"] = block_map
 local function runInTerminal()
   local blocks_in_scope = block_map(commands)
-  local function _12_(command, _)
+  local function _11_(command, _)
     if command then
       return run_in_terminal(blocks_in_scope[command].basedir, blocks_in_scope[command].script)
     else
       return nil
     end
   end
-  return vim.ui.select(core.keys(blocks_in_scope), {prompt = "Select a command:"}, _12_)
+  return vim.ui.select(core.keys(blocks_in_scope), {prompt = "Select a command:"}, _11_)
 end
 _2amodule_2a["runInTerminal"] = runInTerminal
 local function terminal_run_handler(err, result, ctx, config)
@@ -129,12 +127,12 @@ local function terminal_run_handler(err, result, ctx, config)
 end
 _2amodule_2a["terminal-run-handler"] = terminal_run_handler
 local function notify(channel, data)
-  local _15_ = get_client_by_name("docker_lsp")
-  if (nil ~= _15_) then
-    local lsp = _15_
+  local _14_ = get_client_by_name("docker_lsp")
+  if (nil ~= _14_) then
+    local lsp = _14_
     return lsp.notify(channel, data)
   elseif true then
-    local _ = _15_
+    local _ = _14_
     return core.println(channel, data)
   else
     return nil
@@ -143,34 +141,34 @@ end
 _2amodule_2a["notify"] = notify
 local function cli_helper_handler(err, result, ctx, config)
   local p
-  local function _17_(err0, data)
+  local function _16_(err0, data)
     return notify("$/docker/cli-helper", {stdout = data, id = result.id})
   end
-  local function _18_(err0, data)
+  local function _17_(err0, data)
     return notify("$/docker/cli-helper", {stderr = data, id = result.id})
   end
-  local function _21_(_19_)
-    local _arg_20_ = _19_
-    local code = _arg_20_["code"]
-    local signal = _arg_20_["signal"]
-    local data = _arg_20_
-    local function _22_()
+  local function _20_(_18_)
+    local _arg_19_ = _18_
+    local code = _arg_19_["code"]
+    local signal = _arg_19_["signal"]
+    local data = _arg_19_
+    local function _21_()
       if code then
         return {exit = code}
       else
         return nil
       end
     end
-    local function _23_()
+    local function _22_()
       if signal then
         return {signal = signal}
       else
         return nil
       end
     end
-    return notify("$/docker/cli-helper", core.assoc(core.merge(core.merge({}, _22_()), _23_()), "id", result.id))
+    return notify("$/docker/cli-helper", core.assoc(core.merge(core.merge({}, _21_()), _22_()), "id", result.id))
   end
-  p = vim.system(core.concat({result.executable}, result.args), {text = true, stdout = _17_, stderr = _18_, stdin = false}, _21_)
+  p = vim.system(core.concat({result.executable}, result.args), {text = true, stdout = _16_, stderr = _17_, stdin = false}, _20_)
   return {pid = p.pid}
 end
 _2amodule_2a["cli-helper-handler"] = cli_helper_handler
@@ -191,14 +189,14 @@ local function inlay_hint_refresh_handler(err, result, ctx, config)
 end
 _2amodule_2a["inlay-hint-refresh-handler"] = inlay_hint_refresh_handler
 local function terminal_registration_handler(err, result, ctx, config)
-  local _let_25_ = result
-  local blocks = _let_25_["blocks"]
-  local uri = _let_25_["uri"]
-  local function _26_(agg, m)
+  local _let_24_ = result
+  local blocks = _let_24_["blocks"]
+  local uri = _let_24_["uri"]
+  local function _25_(agg, m)
     core.assoc(agg, m.command, m.script)
     return {}
   end
-  commands = core.assoc(commands, uri, core.reduce(_26_, blocks))
+  commands = core.assoc(commands, uri, core.reduce(_25_, blocks))
   return nil
 end
 _2amodule_2a["terminal-registration-handler"] = terminal_registration_handler
@@ -215,10 +213,10 @@ _2amodule_2a["jwt-handler"] = jwt_handler
 local capabilities = cmplsp.default_capabilities()
 do end (_2amodule_2a)["capabilities"] = capabilities
 local function list()
-  local function _28_(client)
+  local function _27_(client)
     return client.name
   end
-  return core.map(_28_, vim.lsp.get_clients())
+  return core.map(_27_, vim.lsp.get_clients())
 end
 _2amodule_2a["list"] = list
 local handlers = {["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {severity_sort = true, underline = true, virtual_text = false, update_in_insert = false}), ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {border = "single"}), ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {border = "single"}), ["textDocument/codeLens"] = vim.lsp.with(vim.lsp.codelens.on_codelens, {border = "single"})}
@@ -244,37 +242,37 @@ local function setup(cb)
 end
 _2amodule_2a["setup"] = setup
 local function start(root_dir, extra_handlers)
-  local _29_
+  local _28_
   if ("nix" == os.getenv("DOCKER_LSP")) then
-    _29_ = docker_lsp_nix_runner(root_dir)
+    _28_ = docker_lsp_nix_runner(root_dir)
   elseif ("clj" == os.getenv("DOCKER_LSP")) then
-    _29_ = docker_lsp_clj_runner(root_dir)
+    _28_ = docker_lsp_clj_runner(root_dir)
   else
-    _29_ = docker_lsp_docker_runner(root_dir)
+    _28_ = docker_lsp_docker_runner(root_dir)
   end
-  return vim.lsp.start({name = "docker_lsp", cmd = _29_, root_dir = root_dir, on_attach = (attach_callback or keymaps["default-attach-callback"]), settings = {docker = {assistant = {debug = true}, scout = {["language-gateway"] = "https://api.scout-stage.docker.com/v1/language-gateway"}}}, handlers = core.merge(handlers, extra_handlers)})
+  return vim.lsp.start({name = "docker_lsp", cmd = _28_, root_dir = root_dir, on_attach = (attach_callback or keymaps["default-attach-callback"]), settings = {docker = {assistant = {debug = true}, scout = {["language-gateway"] = "https://api.scout-stage.docker.com/v1/language-gateway"}}}, handlers = core.merge(handlers, extra_handlers)})
 end
 _2amodule_2a["start"] = start
 local function attach_current_buffers()
   local bufs = vim.api.nvim_list_bufs()
-  local function _31_(bufnr)
+  local function _30_(bufnr)
     core.println("attach ", bufnr)
     return vim.lsp.buf_attach_client(bufnr, (get_client_by_name("docker_lsp")).id)
   end
-  return core.map(_31_, core.vals(bufs))
+  return core.map(_30_, core.vals(bufs))
 end
 _2amodule_2a["attach-current-buffers"] = attach_current_buffers
 vim.api.nvim_create_augroup("docker-ai", {})
 local extra_handlers = {["docker/jwt"] = jwt_handler, ["$terminal/run"] = terminal_run_handler, ["$bind/run"] = terminal_bind_handler, ["$bind/register"] = terminal_registration_handler, ["docker/cli-helper"] = cli_helper_handler, ["workspace/inlayHint/refresh"] = inlay_hint_refresh_handler}
 _2amodule_2a["extra-handlers"] = extra_handlers
-local function _32_()
+local function _31_()
   local client = get_client_by_name("docker_lsp")
   if client then
     vim.lsp.buf_attach_client(0, client.id)
   else
-    start(vim.fn.getcwd(), extra_handlers)
+    lsp_client_id = start(vim.fn.getcwd(), extra_handlers)
   end
   return false
 end
-vim.api.nvim_create_autocmd("FileType", {group = "docker-ai", pattern = docker_lsp_filetypes, callback = _32_, once = false})
+vim.api.nvim_create_autocmd("FileType", {group = "docker-ai", pattern = docker_lsp_filetypes, callback = _31_, once = false})
 return _2amodule_2a

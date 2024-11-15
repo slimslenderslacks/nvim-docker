@@ -7,9 +7,11 @@
              keymaps keymaps
              sha2 sha2}})
 
+(var lsp-client-id nil)
+
 (defn get-client-by-name [s]
-  (core.some
-    (fn [client] (when (= client.name s) client)) (vim.lsp.get_clients)))
+  (if lsp-client-id
+    (vim.lsp.get_client_by_id lsp-client-id)))
 
 ;; jwt handler
 (defn jwt []
@@ -277,9 +279,10 @@
    :callback (fn [] (let [client (get-client-by-name "docker_lsp")]
                       (if client
                         (vim.lsp.buf_attach_client 0 client.id)
-                        (start
-                          (vim.fn.getcwd)
-                          extra-handlers))
+                        (set lsp-client-id
+                          (start
+                            (vim.fn.getcwd)
+                            extra-handlers)))
                       ;; don't delete the autocmd
                       false))})
 
