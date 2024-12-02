@@ -214,7 +214,7 @@ nvim.create_user_command("PromptsToggleUseDocker", _22_, {desc = "toggle prompts
 local function _23_(_)
   return core.println(string.format("HostDir: %s\nDebug: %s\nUseDocker: %s\n", getHostdir(), debug, use_docker))
 end
-nvim.create_user_command("PromptsGetConfigr", _23_, {desc = "get prompts hostdir", nargs = 0})
+nvim.create_user_command("PromptsGetConfig", _23_, {desc = "get prompts hostdir", nargs = 0})
 local function _24_(_)
   return prompt_engine:terminate()
 end

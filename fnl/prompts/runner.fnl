@@ -204,7 +204,7 @@
    :nargs 0})
 
 (nvim.create_user_command
-  "PromptsGetConfigr"
+  "PromptsGetConfig"
   (fn [_]
     (core.println (string.format "HostDir: %s\nDebug: %s\nUseDocker: %s\n"
                                  (getHostdir)
